@@ -456,4 +456,14 @@ namespace QUT.Gplex.Parser
         protected GplexInternalException(SerializationInfo info, StreamingContext context)
             : base(info, context) { }
     }
+
+    [Serializable]
+    public class TooManyErrorsException : Exception
+    {
+        public TooManyErrorsException() { }
+        public TooManyErrorsException(string message) : base(message) { }
+        public TooManyErrorsException(string message, Exception inner) : base(message, inner) { }
+        protected TooManyErrorsException(SerializationInfo info, StreamingContext context)
+            : base(info, context) { }
+    }
 }

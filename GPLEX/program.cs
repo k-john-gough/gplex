@@ -1,5 +1,5 @@
 // Gardens Point Scanner Generator
-// Copyright (c) K John Gough, QUT 2006-2008
+// Copyright (c) K John Gough, QUT 2006-2009
 // (see accompanying GPLEXcopyright.rtf)
 
 using System;
@@ -55,6 +55,8 @@ namespace QUT.Gplex
             }
             catch (Exception ex)
             {
+                if (ex is TooManyErrorsException)
+                    return;
                 Console.Error.WriteLine(ex.Message);
                 throw;
             }
@@ -98,6 +100,7 @@ namespace QUT.Gplex
 			Console.WriteLine("gplex [options] filename");
 			Console.WriteLine("default filename extension is \".lex\"");
   			Console.WriteLine("  options:  /babel           -- create extra interface for Managed Babel scanner");
+            Console.WriteLine("            /caseInsensitive -- create a case-insensitive automaton");
             Console.WriteLine("            /check           -- create automaton but do not create output file");
             Console.WriteLine("            /codePage:NN     -- default codepage NN if no unicode prefix (BOM)");
             Console.WriteLine("            /codePageHelp    -- display codepage help");

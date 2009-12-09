@@ -51,6 +51,7 @@ namespace QUT.Gplex.Automaton
         bool stack;
         bool babel;
 		bool verbose;
+        bool caseAgnostic;
 		bool checkOnly;
         bool parseOnly;
         bool persistBuff = true;
@@ -123,6 +124,7 @@ namespace QUT.Gplex.Automaton
         internal bool HasParser { get { return hasParser; } }
         internal bool ChrClasses { get { return charClasses; } }
         internal bool EmbedBuffers { get { return embedBuffers; } }
+        internal bool CaseAgnostic { get { return caseAgnostic; } }
 
         internal bool Version    { get { return emitVer; } }
         internal bool Summary    { get { return summary; } }
@@ -206,6 +208,7 @@ namespace QUT.Gplex.Automaton
                 if (negate) 
                     arg = arg.Substring(2);
                 if (arg.Equals("CHECK", StringComparison.Ordinal)) checkOnly = !negate;
+                else if (arg.StartsWith("CASEINSEN", StringComparison.Ordinal)) caseAgnostic = !negate;
                 else if (arg.StartsWith("LIST", StringComparison.Ordinal)) listing = !negate;
                 else if (arg.Equals("SUMMARY", StringComparison.Ordinal)) summary = !negate;
                 else if (arg.Equals("STACK", StringComparison.Ordinal)) stack = !negate;
@@ -224,25 +227,21 @@ namespace QUT.Gplex.Automaton
                     else
                         fallbackCodepage = utf8CP;
                 }
-                else if (arg.Equals("COMPRESSMAP", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("COMPRESSMAP", StringComparison.Ordinal)) {
                     compressMap = !negate;
                     compressMapExplicit = true;
                 }
-                else if (arg.Equals("COMPRESSNEXT", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("COMPRESSNEXT", StringComparison.Ordinal)) {
                     compressNext = !negate;
                     //compressNextExplicit = true;
                 }
-                else if (arg.Equals("COMPRESS", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("COMPRESS", StringComparison.Ordinal)) {
                     compressMap = !negate;
                     compressNext = !negate;
                     compressMapExplicit = true;
                     //compressNextExplicit = true;
                 }
-                else if (arg.Equals("SQUEEZE", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("SQUEEZE", StringComparison.Ordinal)) {
                     // Compress both map and next-state
                     // but do not use two-level compression
                     // ==> trade time for space.
@@ -252,8 +251,7 @@ namespace QUT.Gplex.Automaton
                     compressMapExplicit = true;
                     //compressNextExplicit = true;
                 }
-                else if (arg.Equals("UNICODE", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("UNICODE", StringComparison.Ordinal)) {
                     // Have to do some checks here. If an attempt is made to
                     // set (no)unicode after the alphabet size has been set
                     // it is a command line or inline option error.
@@ -263,20 +261,17 @@ namespace QUT.Gplex.Automaton
                         targetSymCardinality = cardinality;
                     else
                         return OptionState.alphabetLocked;
-                    if (useUnicode)
-                    {
+                    if (useUnicode) {
                         charClasses = true;
                         if (!compressMapExplicit)
                             compressMap = true;
                     }
                 }
-                else if (arg.Equals("VERBOSE", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("VERBOSE", StringComparison.Ordinal)) {
                     verbose = !negate;
                     if (verbose) emitVer = true;
                 }
-                else if (arg.Equals("CLASSES", StringComparison.Ordinal))
-                {
+                else if (arg.Equals("CLASSES", StringComparison.Ordinal)) {
                     if (negate && useUnicode)
                         return OptionState.inconsistent;
                     charClasses = !negate;
@@ -563,7 +558,7 @@ namespace QUT.Gplex.Automaton
                         if (ChrClasses)
                         {
                             DateTime t0 = DateTime.Now;
-                            partition = new Partition(TargetSymCardinality);
+                            partition = new Partition(TargetSymCardinality, this);
                             partition.FindClasses(aast);
                             partition.FixMap();
                             if (verbose)

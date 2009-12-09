@@ -2,10 +2,10 @@
 // Copyright (c) Wayne Kelly, QUT 2005-2008
 // (see accompanying GPPGcopyright.rtf)
 
-// GPPG version 1.3.5.190
-// Machine:  RADNOR2
-// DateTime: 19/03/2009 10:09:12 AM
-// UserName: John Gough
+// GPPG version 1.3.5.191
+// Machine:  JOHNS_NETBOOK
+// DateTime: 9/12/2009 2:57:48 PM
+// UserName: john
 // Input file <gplex.y>
 
 // options: no-lines gplex
