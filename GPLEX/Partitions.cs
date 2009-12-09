@@ -35,11 +35,11 @@ namespace QUT.Gplex.Parser
         internal const int PageSize = 256; // Pagesize for two-level map
 
         internal List<PartitionElement> elements = new List<PartitionElement>();
-        internal BitArray bSingletons;
-        internal TreeSet tSingletons;
+
         internal List<MapRun> mapRuns;
         internal List<MapRun> runsInBMP = new List<MapRun>();
         internal List<MapRun> runsInNonBMPs = new List<MapRun>();
+        internal TaskState myTask;
 
         internal List<MapRun> pages;
 
@@ -50,14 +50,11 @@ namespace QUT.Gplex.Parser
         /// Create a new partition
         /// </summary>
         /// <param name="symCard">The symbol alphabet cardinality</param>
-        internal Partition(int symCard)
-        {
+        internal Partition(int symCard, TaskState task) {
+            this.myTask = task;
             CharRange.Init(symCard);
             PartitionElement.Reset();
 
-            bSingletons = new BitArray(symCard);
-
-            tSingletons = new TreeSet();
             elements.Add(PartitionElement.AllChars());
         }
 
@@ -289,24 +286,27 @@ namespace QUT.Gplex.Parser
 
         internal Accumulator(Partition part) { this.partition = part; }
 
+        // Refine based on a single, isolated character.
+        // The singleton is transformed into a RangeLiteral with just
+        // one element in its RangeList, with a one-length range. 
         private void DoSingleton(int ch)
         {
-            if (partition.bSingletons[(int)ch] != partition.tSingletons[(int)ch])
-                throw new GplexInternalException("BitArray and TreeSet not synchronized");
-            if (!partition.tSingletons[(int)ch])
-            {
-                partition.bSingletons[(int)ch] = true; // Keep bitset and tree synchronized
-
-                partition.tSingletons[(int)ch] = true;
+#if DEBUG
+            char c = (char)ch; // For readability
+#endif
+            if (this.partition.myTask.CaseAgnostic)
+                partition.Refine(RangeLiteral.NewCaseAgnosticPair(ch));
+            else 
                 partition.Refine(new RangeLiteral(ch));
-            }
         }
 
         private void DoLiteral(RangeLiteral lit)
         {
-            if (lit.part != this.partition)
+            if (lit.lastPart != this.partition)
             {
-                lit.part = this.partition;
+                lit.lastPart = this.partition;
+                if (this.partition.myTask.CaseAgnostic)
+                    lit.list = lit.list.MakeCaseAgnosticList();
                 lit.list.Canonicalize();
                 partition.Refine(lit);
             }
@@ -370,6 +370,7 @@ namespace QUT.Gplex.Parser
         /// The set operations AND, SUB, EQU rely on this property!
         /// </summary>
         private bool isCanonical = true;
+        private bool isAgnostic = false;
         private bool invert;
 
         private List<CharRange> ranges;
@@ -525,8 +526,8 @@ namespace QUT.Gplex.Parser
         /// </summary>
         internal void Canonicalize()
         {
-            if (!invert && this.ranges.Count <= 1) 
-                return; // Empty and singleton RangeLists are trivially canonical
+            if (!invert && this.ranges.Count <= 1 || this.isCanonical)
+                return; // Empty, singleton and upper/lower pair RangeLists are trivially canonical
             // Process non-empty lists.
             int listIx = 0;
             this.ranges.Sort();
@@ -556,6 +557,39 @@ namespace QUT.Gplex.Parser
                 this.ranges = this.InvertedList();
             }
             isCanonical = true;
+        }
+
+        /// <summary>
+        /// Returns a new RangeList which is case-agnostic.
+        /// The returned list will, in general, be seriously non-canonical.
+        /// </summary>
+        /// <returns>New case-insensitive list</returns>
+        internal RangeList MakeCaseAgnosticList() {
+            if (isAgnostic) return this; // Function is idempotent. Do not repeat.
+
+            if (!isCanonical) this.Canonicalize();
+            List<CharRange> agnosticList = new List<CharRange>();
+            foreach (CharRange range in this.ranges) {
+                for (int ch = range.minChr; ch <= range.maxChr; ch++) {
+                    if (ch < char.MaxValue) {
+                        char c = (char)ch;
+                        char lo = char.ToLower(c);
+                        char hi = char.ToUpper(c);
+                        if (lo == hi)
+                            agnosticList.Add(new CharRange(c));
+                        else {
+                            agnosticList.Add(new CharRange(lo));
+                            agnosticList.Add(new CharRange(hi));
+                        }
+                    }
+                    else
+                        agnosticList.Add(new CharRange(ch));
+                }
+            }
+            RangeList result = new RangeList(agnosticList, false);
+            result.isCanonical = false;
+            result.isAgnostic = true;
+            return result;
         }
 
 #if PARTITION_DIAGNOSTICS
@@ -683,7 +717,7 @@ namespace QUT.Gplex.Parser
         /// <summary>
         /// The last partition that this literal has refined
         /// </summary>
-        internal Partition part;
+        internal Partition lastPart;
 
         internal RangeList list;
         internal List<int> equivClasses = new List<int>();
@@ -694,8 +728,30 @@ namespace QUT.Gplex.Parser
             list = new RangeList(false);
             list.Add(new CharRange(ch, ch)); // AddToRange
         }
+        private RangeLiteral(int lo, int hi) {
+            list = new RangeList(false);
+            list.Add(new CharRange(lo, lo));
+            list.Add(new CharRange(hi, hi));
+            list.Canonicalize();
+        }
 
-        //internal bool Empty { get { return list.IsEmpty; } }
+        /// <summary>
+        /// If ch represents a charater with different upper and lower
+        /// case codes, return a RangeLiteral representing the pair.
+        /// Otherwise return a singleton RangeLiteral.
+        /// </summary>
+        /// <param name="ch">the code point to test</param>
+        /// <returns>a pair or a singleton RangeLiteral</returns>
+        internal static RangeLiteral NewCaseAgnosticPair(int ch) {
+            if (ch < Char.MaxValue) {
+                char c = (char)ch;
+                char lo = char.ToLower(c);
+                char hi = char.ToUpper(c);
+                if (lo != hi)
+                    return new RangeLiteral(lo, hi);
+            }
+            return new RangeLiteral(ch);
+        }
 
         public override string ToString() { return name; }
 

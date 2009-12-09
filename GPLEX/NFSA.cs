@@ -48,6 +48,8 @@ namespace QUT.Gplex.Automaton
                         RuleDesc rule = s.rules[i];
                         RegExTree tree = rule.Tree;
 
+                        // This test constructs the disjoint automata
+                        // that test code points for predicate evaluation.
                         if (rule.isPredDummyRule)
                         {
                             NState entry = nInst.Entry;
@@ -183,6 +185,9 @@ namespace QUT.Gplex.Automaton
             /// </summary>
             internal int MaxSym { get { return maxS; } }
 
+            /// <summary>
+            /// True means this automaton uses character equivalence classes
+            /// </summary>
             internal bool Pack { get { return pack; } }
 
             /// <summary>
@@ -358,7 +363,7 @@ namespace QUT.Gplex.Automaton
                                         //  This code is complicated by the fact that unicode
                                         //  escape substitution may have inserted surrogate
                                         //  pairs of characters in the string.  We need
-                                        //  one transition for every unicode character,
+                                        //  one transition for every unicode codepoint,
                                         //  not one for every char value in this string.
                                         //
                                         int index = 0;
@@ -446,8 +451,21 @@ namespace QUT.Gplex.Automaton
             /// </summary>
             /// <param name="chr">The character value</param>
             /// <param name="nxt">The destination state</param>
-            public void AddChrTrns(int chr, NState nxt)
-            {
+            public void AddChrTrns(int chr, NState nxt) {
+                if (myNfaInst.parent.task.CaseAgnostic  && chr < Char.MaxValue) {
+                    char c = (char)chr;
+                    char lo = Char.ToLower(c);
+                    char hi = Char.ToUpper(c);
+                    if (lo != hi) {
+                        AddTrns(lo, nxt);
+                        AddTrns(hi, nxt);
+                        return;
+                    }
+                }
+                AddTrns(chr, nxt);
+            }
+
+            private void AddTrns(int chr, NState nxt) {
                 if (myNfaInst.Pack)
                     chr = myNfaInst.parent.task.partition[chr];
                 AddRawTransition(chr, nxt);
@@ -496,6 +514,11 @@ namespace QUT.Gplex.Automaton
             /// <param name="nxt">The destination state</param>
             public void AddClsTrans(Leaf leaf, NState nxt)
             {
+                if (myNfaInst.parent.task.CaseAgnostic) {
+                    leaf.rangeLit.list = leaf.rangeLit.list.MakeCaseAgnosticList();
+                    leaf.rangeLit.list.Canonicalize();
+                }
+
                 BitArray cls = new BitArray(myNfaInst.MaxSym);
                 if (myNfaInst.Pack)
                 {

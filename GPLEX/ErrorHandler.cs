@@ -41,6 +41,8 @@ namespace QUT.Gplex.Parser
     
     internal class ErrorHandler
     {
+        const int maxErrors = 50; // Will this be enough for all users?
+
         List<Error> errors;
         int errNum;
         int wrnNum; 
@@ -69,13 +71,18 @@ namespace QUT.Gplex.Parser
 
         internal void AddError(string msg, LexSpan spn)
         {
-            errors.Add(new Error(msg, spn, false)); errNum++;
+            this.AddError(new Error(msg, spn, false)); errNum++;
         }
 
-        //internal void AddWarning(string msg, LexSpan spn)
-        //{
-        //    errors.Add(new Error(msg, spn, true)); wrnNum++;
-        //}
+        private void AddError(Error e)
+        {
+            errors.Add(e);
+            if (errors.Count > maxErrors)
+            {
+                errors.Add(new Error("Too many errors, abandoning", e.span, false));
+                throw new TooManyErrorsException("Too many errors");
+            }
+        }
 
         /// <summary>
         /// Add this error to the error buffer.
@@ -152,7 +159,7 @@ namespace QUT.Gplex.Parser
             }
             // message = prefix + " <" + key + "> " + suffix;
             message = String.Format(CultureInfo.InvariantCulture, "{0} {1}{2}{3} {4}", prefix, lh, key, rh, suffix);
-            errors.Add(new Error(message, spn, num >= Error.minWrn)); 
+            this.AddError(new Error(message, spn, num >= Error.minWrn)); 
             if (num < Error.minWrn) errNum++; else wrnNum++;
         }
 
@@ -204,7 +211,7 @@ namespace QUT.Gplex.Parser
 
                 default:  message = "Error " + Convert.ToString(num, CultureInfo.InvariantCulture); break;
             }
-            errors.Add(new Error(message, spn, num >= Error.minWrn));
+            this.AddError(new Error(message, spn, num >= Error.minWrn));
             if (num < Error.minWrn) errNum++; else wrnNum++;
         }
  
