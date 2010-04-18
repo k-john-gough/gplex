@@ -107,6 +107,19 @@ namespace QUT.Gppg
         /// <param name="rules">The array of Rule objects</param>
         protected void InitRules(Rule[] rules) { this.rules = rules; }
 
+      /// <summary>
+      /// Initialization method to allow derived classes to
+      /// insert the states table into this base class.
+      /// </summary>
+      /// <param name="states">The pre-initialized states table</param>
+        protected void InitStates(State[] states) { this.states = states; }
+
+      /// <summary>
+      /// OBSOLETE FOR VERSION 1.4.0
+      /// </summary>
+      /// <param name="size"></param>
+        protected void InitStateTable(int size) { states = new State[size]; }
+
         /// <summary>
         /// Initialization method to allow derived classes
         /// to insert the special value for the error and EOF tokens.
@@ -118,13 +131,6 @@ namespace QUT.Gppg
             errorToken = err;
             endOfFileToken = end;
         }
-
-        /// <summary>
-        /// Initialization method to allow derived classes 
-        /// to allocate the state table in this base class.
-        /// </summary>
-        /// <param name="size">The number of states</param>
-        protected void InitStateTable(int size) { states = new State[size]; }
 
         /// <summary>
         /// Initialization method to allow derived classes to
@@ -541,6 +547,7 @@ namespace QUT.Gppg
         }
 
         /// <summary>
+        /// OBSOLETE FOR VERSION 1.4.0
         /// Method used by derived types to insert new
         /// state instances in the "states" array.
         /// </summary>
