@@ -335,8 +335,7 @@ using System.Diagnostics.CodeAnalysis;
 #if !NOFILES
 ##--&gt;translate $public $Scanner(Stream file) {
 ##--&gt;bufferCtor
-        }
-        
+        }   
 #endif // !NOFILES
 
 ##--&gt;translate $public $Scanner() { }
@@ -417,9 +416,7 @@ using System.Diagnostics.CodeAnalysis;
             GetCode();
         }
 
-#if !NOFILES        
         // ================ LineBuffer Initialization ===================
-
         /// &lt;summary&gt;
         /// Create and initialize a LineBuff buffer object for this scanner
         /// &lt;/summary&gt;
@@ -433,6 +430,7 @@ using System.Diagnostics.CodeAnalysis;
             GetCode();
         }
 
+#if !NOFILES        
         // =============== StreamBuffer Initialization ==================
 
         /// &lt;summary&gt;
@@ -791,6 +789,7 @@ using System.Diagnostics.CodeAnalysis;
             return new LineBuffer(source);
         }
 
+#if (!NOFILES)
         public static ScanBuff GetBuffer(Stream source)
         {
             return new BuildBuffer(source);
@@ -801,7 +800,8 @@ using System.Diagnostics.CodeAnalysis;
         {
             return new BuildBuffer(source, fallbackCodePage);
         }
-#endif
+#endif // !BYTEMODE
+#endif // !NOFILES
     }
 
     #region Buffer classes
@@ -982,7 +982,8 @@ using System.Diagnostics.CodeAnalysis;
             {
                 cPos = value;
                 findIndex(cPos, out cLine, out curLineStart);
-                curLine = line[cLine];
+                // cLine should be the *next* line after curLine.
+                curLine = line[cLine++];
                 curLineEnd = curLineStart + curLine.Length;
             }
         }
@@ -990,7 +991,7 @@ using System.Diagnostics.CodeAnalysis;
         public override string ToString() { return "LineBuffer"; }
     }
 
-
+#if (!NOFILES)
     // ==============================================================
     // =====     class BuildBuff : for unicode text files    ========
     // ==============================================================
@@ -1231,12 +1232,13 @@ using System.Diagnostics.CodeAnalysis;
         }
 #endif // !BYTEMODE
     }
+#endif // !NOFILES
     #endregion Buffer classes
 
     // ==============================================================
     // ============      class CodePageHandling         =============
     // ==============================================================
-
+#if (!NOFILES)
     public static class CodePageHandling
     {
         public static int GetCodePage(string option)
@@ -1447,6 +1449,7 @@ using System.Diagnostics.CodeAnalysis;
     
 #endif // !BYTEMODE
 #endregion
+#endif // !NOFILES
 </value>
   </data>
 </root>
