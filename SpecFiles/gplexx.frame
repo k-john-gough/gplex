@@ -205,8 +205,7 @@ using System.Diagnostics.CodeAnalysis;
 #if !NOFILES
 ##-->translate $public $Scanner(Stream file) {
 ##-->bufferCtor
-        }
-        
+        }   
 #endif // !NOFILES
 
 ##-->translate $public $Scanner() { }
@@ -287,9 +286,7 @@ using System.Diagnostics.CodeAnalysis;
             GetCode();
         }
 
-#if !NOFILES        
         // ================ LineBuffer Initialization ===================
-
         /// <summary>
         /// Create and initialize a LineBuff buffer object for this scanner
         /// </summary>
@@ -303,6 +300,7 @@ using System.Diagnostics.CodeAnalysis;
             GetCode();
         }
 
+#if !NOFILES        
         // =============== StreamBuffer Initialization ==================
 
         /// <summary>

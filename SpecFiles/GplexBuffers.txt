@@ -35,6 +35,7 @@
             return new LineBuffer(source);
         }
 
+#if (!NOFILES)
         public static ScanBuff GetBuffer(Stream source)
         {
             return new BuildBuffer(source);
@@ -45,7 +46,8 @@
         {
             return new BuildBuffer(source, fallbackCodePage);
         }
-#endif
+#endif // !BYTEMODE
+#endif // !NOFILES
     }
 
     #region Buffer classes
@@ -226,7 +228,8 @@
             {
                 cPos = value;
                 findIndex(cPos, out cLine, out curLineStart);
-                curLine = line[cLine];
+                // cLine should be the *next* line after curLine.
+                curLine = line[cLine++];
                 curLineEnd = curLineStart + curLine.Length;
             }
         }
@@ -234,7 +237,7 @@
         public override string ToString() { return "LineBuffer"; }
     }
 
-
+#if (!NOFILES)
     // ==============================================================
     // =====     class BuildBuff : for unicode text files    ========
     // ==============================================================
@@ -475,12 +478,13 @@
         }
 #endif // !BYTEMODE
     }
+#endif // !NOFILES
     #endregion Buffer classes
 
     // ==============================================================
     // ============      class CodePageHandling         =============
     // ==============================================================
-
+#if (!NOFILES)
     public static class CodePageHandling
     {
         public static int GetCodePage(string option)
@@ -691,3 +695,4 @@
     
 #endif // !BYTEMODE
 #endregion
+#endif // !NOFILES
