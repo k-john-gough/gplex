@@ -130,7 +130,7 @@
   <data name="GplexxFrame" xml:space="preserve">
     <value>//
 // Experimental embedded frame
-// Version 1.1.3 of 18-April-2010
+// Version 1.1.4 of 10-May-2010
 //
 ## Derived from gplex.frame version of 2-September-2006.
 ## Code page support for files without a BOM. 
@@ -577,13 +577,12 @@ using System.Diagnostics.CodeAnalysis;
                 else {
                     int ch;
                     int count = 0;
-                    int save = buffer.Pos;
                     buffer.Pos = tokPos;
                     do {
                         ch = buffer.Read();
                         if (!char.IsHighSurrogate((char)ch)) count++;
                     } while (buffer.Pos &lt; tokEPos &amp;&amp; ch != ScanBuff.EndOfFile);
-                    buffer.Pos = save; 
+                    buffer.Read(); 
                     return count;
                 }
 #endif // BYTEMODE
@@ -924,7 +923,7 @@ using System.Diagnostics.CodeAnalysis;
             {
                 ix = lstart = 0;
             }
-            for (; ; )
+            while (ix &lt; numLines)
             {
                 int len = line[ix].Length + 1;
                 if (pos &lt; lstart + len) break;
@@ -983,7 +982,7 @@ using System.Diagnostics.CodeAnalysis;
                 cPos = value;
                 findIndex(cPos, out cLine, out curLineStart);
                 // cLine should be the *next* line after curLine.
-                curLine = line[cLine++];
+                curLine = (cLine &lt; numLines ? line[cLine++] : "");
                 curLineEnd = curLineStart + curLine.Length;
             }
         }

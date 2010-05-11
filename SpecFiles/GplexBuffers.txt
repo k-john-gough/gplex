@@ -170,7 +170,7 @@
             {
                 ix = lstart = 0;
             }
-            for (; ; )
+            while (ix < numLines)
             {
                 int len = line[ix].Length + 1;
                 if (pos < lstart + len) break;
@@ -229,7 +229,7 @@
                 cPos = value;
                 findIndex(cPos, out cLine, out curLineStart);
                 // cLine should be the *next* line after curLine.
-                curLine = line[cLine++];
+                curLine = (cLine < numLines ? line[cLine++] : "");
                 curLineEnd = curLineStart + curLine.Length;
             }
         }
