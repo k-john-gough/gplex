@@ -382,7 +382,7 @@ namespace QUT.Gplex.Parser
                 if (loUtf16 < 0xDC00 || loUtf16 > 0xDFFF)
                     throw new ArgumentException("Invalid surrogate pair");
                 else
-                    return (0x10000 + (hiUtf16 & 0x3FF << 10) + (loUtf16 & 0x3FF));
+                    return (0x10000 + ((hiUtf16 & 0x3FF) << 10) + (loUtf16 & 0x3FF));
             }
         }
 

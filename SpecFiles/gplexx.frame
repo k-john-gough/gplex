@@ -233,7 +233,7 @@ using System.Diagnostics.CodeAnalysis;
                     if (next < 0xDC00 || next > 0xDFFF)
                         code = ScanBuff.UnicodeReplacementChar;
                     else
-                        code = (0x10000 + (code & 0x3FF << 10) + (next & 0x3FF));
+                        code = (0x10000 + ((code & 0x3FF) << 10) + (next & 0x3FF));
                 }
 #endif
                 cCol++;
@@ -402,6 +402,12 @@ using System.Diagnostics.CodeAnalysis;
             }
         }
 
+        /// <summary>
+        /// Discards all but the first "n" codepoints in the recognized pattern.
+        /// Resets the buffer position so that only n codepoints have been consumed;
+        /// yytext is also re-evaluated. 
+        /// </summary>
+        /// <param name="n">The number of codepoints to consume</param>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         void yyless(int n)
         {
@@ -421,6 +427,10 @@ using System.Diagnostics.CodeAnalysis;
         //  but it does not seem possible to re-establish
         //  the correct column counts except by going forward.
         //
+        /// <summary>
+        /// Removes the last "n" code points from the pattern.
+        /// </summary>
+        /// <param name="n">The number to remove</param>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         void _yytrunc(int n) { yyless(yyleng - n); }
         
@@ -433,26 +443,32 @@ using System.Diagnostics.CodeAnalysis;
         // can't use (tokEPos - tokPos) because of the
         // possibility of surrogate pairs in the token.
         //
+        /// <summary>
+        /// The length of the pattern in codepoints (not the same as 
+        /// string-length if the pattern contains any surrogate pairs).
+        /// </summary>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "yyleng")]
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "yyleng")]
         public int yyleng
         {
             get {
-#if BYTEMODE
-                return tokEPos - tokPos;
-#else   
                 if (tokELin == tokLin)
                     return tokECol - tokCol;
-                else {
+                else
+#if BYTEMODE
+                    return tokEPos - tokPos;
+#else
+                {
                     int ch;
                     int count = 0;
+                    int save = buffer.Pos;
                     buffer.Pos = tokPos;
                     do {
                         ch = buffer.Read();
                         if (!char.IsHighSurrogate((char)ch)) count++;
                     } while (buffer.Pos < tokEPos && ch != ScanBuff.EndOfFile);
-                    buffer.Read(); 
+                    buffer.Pos = save;
                     return count;
                 }
 #endif // BYTEMODE
