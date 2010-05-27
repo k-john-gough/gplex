@@ -437,7 +437,7 @@ namespace QUT.Gppg
                     return true;
 
 #if TRACE_ACTIONS
-					Console.Error.WriteLine("Error: popping state {0}", StateStack.Top().number);
+					Console.Error.WriteLine("Error: popping state {0}", StateStack.TopElement().number);
 #endif
                 StateStack.Pop();
                 valueStack.Pop();
@@ -596,7 +596,7 @@ namespace QUT.Gppg
         private string SymbolToString(int symbol)
         {
             if (symbol < 0)
-                return nonTerminals[-symbol];
+                return nonTerminals[-symbol-1];
             else
                 return TerminalToString(symbol);
         }
