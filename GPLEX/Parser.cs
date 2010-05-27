@@ -2,9 +2,9 @@
 // Copyright (c) Wayne Kelly, QUT 2005-2010
 // (see accompanying GPPGcopyright.rtf)
 
-// GPPG version 1.4.0
+// GPPG version 1.3.7
 // Machine:  ATTIC-1
-// DateTime: 13/05/2010 4:48:12 PM
+// DateTime: 27/05/2010 4:38:05 PM
 // UserName: john
 // Input file <gplex.y>
 
@@ -214,6 +214,8 @@ internal partial class Parser: ShiftReduceParser<int, LexSpan>
     states[157] = new State(-5);
     states[158] = new State(new int[]{44,159});
     states[159] = new State(-6);
+
+    for (int sNo = 0; sNo < states.Length; sNo++) states[sNo].number = sNo;
 
     rules[1] = new Rule(-2, new int[]{-1,2});
     rules[2] = new Rule(-1, new int[]{-3,-4});
