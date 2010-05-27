@@ -1,5 +1,5 @@
 // Gardens Point Parser Generator
-// Copyright (c) Wayne Kelly, QUT 2005-2009
+// Copyright (c) Wayne Kelly, QUT 2005-2010
 // (see accompanying GPPGcopyright.rtf)
 
 using System;
@@ -561,7 +561,7 @@ namespace QUT.Gppg
 
         private void DisplayStack()
         {
-            Console.Error.Write("State now");
+            Console.Error.Write("State stack is now:");
             for (int i = 0; i < StateStack.Depth; i++)
                 Console.Error.Write(" {0}", StateStack[i].number);
             Console.Error.WriteLine();
