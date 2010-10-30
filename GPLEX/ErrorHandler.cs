@@ -203,6 +203,7 @@ namespace QUT.Gplex.Parser
 
                 case 100: message = "Context operator cannot be used with right anchor '$'"; break;
                 case 101: message = "Extra characters at end of regular expression"; break;
+                case 102: message = "Literal string terminated by end of line"; break;
 
                 case 110: message = "Code between rules, ignored"; break;
                 case 112: message = "/babel option is unsafe without /unicode option"; break;

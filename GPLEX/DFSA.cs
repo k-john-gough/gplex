@@ -1038,7 +1038,7 @@ namespace QUT.Gplex.Automaton
                 sWrtr.WriteLine("//  Machine:  " + Environment.MachineName);
                 sWrtr.WriteLine("//  DateTime: " + DateTime.Now.ToString());
                 sWrtr.WriteLine("//  UserName: " + Environment.UserName);
-                sWrtr.WriteLine("//  GPLEX input file <" + myTask.FileName + ">");
+                sWrtr.WriteLine("//  GPLEX input file <" + myTask.InputInfo + ">");
                 sWrtr.WriteLine("//  GPLEX frame file <" + myTask.FrameName + ">");
                 sWrtr.WriteLine("//");
                 sWrtr.WriteLine("//  Option settings:{0}{1}{2}{3}{4}{5}",

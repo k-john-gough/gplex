@@ -1198,7 +1198,7 @@ namespace QUT.Gplex.Parser
         internal string str;
         internal RangeLiteral rangeLit;
 
-        internal Leaf(string s) : base(RegOp.litStr) { str = CharacterUtilities.InterpretCharacterEscapes(s); }
+        internal Leaf(string s) : base(RegOp.litStr) { str = s; } // Don't reinterpret escapes.
         internal Leaf(int code) : base(RegOp.primitive) { chVal = code; }
         internal Leaf(RegOp op) : base(op) {}
 
