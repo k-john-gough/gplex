@@ -71,6 +71,7 @@ namespace QUT.Gplex.Automaton
         bool charClasses;
         bool useUnicode;
 		string fileName;                   // Filename of the input file.
+        string inputInfo;                  // Pathname plus last write DateTime.
         string pathName;                   // Input file path string from user.
         string outName;                    // Output file path string (possibly empty)
         string baseName;                   // Base name of input file, without extension.
@@ -158,8 +159,9 @@ namespace QUT.Gplex.Automaton
         internal int    ErrNum     { get { return handler.ErrNum; } }
         internal int    WrnNum     { get { return handler.WrnNum; } }
         internal string VerString  { get { return version; } }
-        internal string FileName   { get { return fileName; } }
-        internal string FrameName  { get { return frameName; } }
+        internal string FileName { get { return fileName; } }
+        internal string InputInfo { get { return inputInfo; } }
+        internal string FrameName { get { return frameName; } }
         internal TextWriter Msg    { get { return msgWrtr; } }
 
         internal int HostSymCardinality { get { return hostSymCardinality; } }
@@ -357,6 +359,7 @@ namespace QUT.Gplex.Automaton
             {
                 inputFile = new FileStream(this.pathName, FileMode.Open, FileAccess.Read, FileShare.Read);
                 if (verbose) msgWrtr.WriteLine("GPLEX: opened input file <{0}>", pathName);
+                inputInfo = this.pathName + " - " + File.GetLastWriteTime(this.pathName).ToString();
             }
             catch (IOException)
             {

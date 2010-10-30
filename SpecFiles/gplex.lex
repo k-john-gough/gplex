@@ -35,6 +35,7 @@ OctEsc       \\{OctDig}{3}
 HexEsc       \\x{HexDig}{2}
 UniEsc       \\u{HexDig}{4}
 UNIESC       \\U{HexDig}{8}
+VerbChr      [^\"]
 
 ClsChs       [^\\\]\r\n]
 ChrCls       \[({ClsChs}|{EscChr}|{OctEsc}|{HexEsc}|{UniEsc}|{UNIESC})+\]
@@ -44,6 +45,9 @@ ChrChs       [^\\'\a\b\f\n\r\t\v\0]
 
 LitChr       \'({ChrChs}|{EscChr}|{OctEsc}|{HexEsc}|{UniEsc}|{UNIESC})\'
 LitStr       \"({StrChs}|{EscChr}|{OctEsc}|{HexEsc}|{UniEsc}|{UNIESC})*\"
+BadStr       \"({StrChs}|{EscChr}|{OctEsc}|{HexEsc}|{UniEsc}|{UNIESC})*{Eol}
+VerbStr      @\"({VerbChr}|\"\")*\"
+
 ClsRef       \{{Ident}\}
 RepMrk       \{{Number}(,{Number}?)?\}
 
@@ -178,6 +182,11 @@ OneLineCmnt  \/\/{DotChr}*
                            return (int)Tokens.repErr;
                        }
                      }
+<REGEX>{Regex}*{BadStr} {
+                       yy_pop_state();
+                       Error(102, TokenSpan());
+                       return (int)Tokens.repErr;
+                     }
 
 <INDNT,UCODE,BCODE,LCODE>{
     <RULES,PRGRP>{
@@ -199,6 +208,11 @@ OneLineCmnt  \/\/{DotChr}*
     {CShOps}         |
     {Dgrphs}         { return (int)Tokens.csOp; }
     {LitStr}         { return (int)Tokens.csLitstr; }
+    {VerbStr}         { return (int)Tokens.csVerbstr; }
+    {BadStr}         {
+                       Error(102, TokenSpan()); 
+                       return (int)Tokens.repErr; 
+                     }
     {LitChr}         { return (int)Tokens.csLitchr; }
     ,                { return (int)Tokens.comma; }
     ;                { return (int)Tokens.semi; }

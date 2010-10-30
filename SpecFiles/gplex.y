@@ -12,7 +12,7 @@
 %visibility internal
 %output=Parser.cs
 
-%token csKeyword csIdent csNumber csLitstr csLitchr csOp 
+%token csKeyword csIdent csNumber csLitstr csVerbstr csLitchr csOp 
        csBar "|", csDot ".", semi ";", csStar "*", csLT "<", csGT ">", 
        comma ",", csSlash "/", csLBrac "[", csRBrac "]", csLPar "(",
        csRPar ")", csLBrace "{", csRBrace "}"
@@ -262,7 +262,8 @@ NonPairedToken
                                  }
                                }
     | csNumber                             
-    | csLitstr                             
+    | csLitstr
+    | csVerbstr                             
     | csLitchr                             
     | csOp
     | csDot
