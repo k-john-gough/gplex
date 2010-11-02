@@ -105,8 +105,9 @@ namespace QUT.Gplex
             Console.WriteLine("            /codePage:NN     -- default codepage NN if no unicode prefix (BOM)");
             Console.WriteLine("            /codePageHelp    -- display codepage help");
             Console.WriteLine("            /classes         -- use character equivalence classes");
-            Console.WriteLine("            /frame:path      -- use \"path\" as frame file"); 
-			Console.WriteLine("            /help            -- display this usage message");
+            Console.WriteLine("            /frame:path      -- use \"path\" as frame file");
+            Console.WriteLine("            /help            -- display this usage message");
+            Console.WriteLine("            /info            -- scanner has header comment (on by default)");
             Console.WriteLine("            /listing         -- emit listing even if no errors");
             Console.WriteLine("            /noCompress      -- do not compress scanner tables");
             Console.WriteLine("            /noCompressMap   -- do not compress character map");
@@ -123,7 +124,6 @@ namespace QUT.Gplex
             Console.WriteLine("            /squeeze         -- sacrifice speed for small size");
             Console.WriteLine("            /summary         -- emit statistics to list file");
             Console.WriteLine("            /unicode         -- generate a unicode enabled scanner");
-            // Console.WriteLine("            /UTF8default    -- deprecated, use /CodePage:utf-8 instead");
             Console.WriteLine("            /verbose         -- chatter on about progress");
             Console.WriteLine("            /version         -- give version information for GPLEX");
         }
