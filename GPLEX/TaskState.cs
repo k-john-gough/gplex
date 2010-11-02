@@ -52,6 +52,7 @@ namespace QUT.Gplex.Automaton
         bool babel;
 		bool verbose;
         bool caseAgnostic;
+        bool emitInfo = true;
 		bool checkOnly;
         bool parseOnly;
         bool persistBuff = true;
@@ -126,6 +127,7 @@ namespace QUT.Gplex.Automaton
         internal bool ChrClasses { get { return charClasses; } }
         internal bool EmbedBuffers { get { return embedBuffers; } }
         internal bool CaseAgnostic { get { return caseAgnostic; } }
+        internal bool EmitInfoHeader { get { return emitInfo; } }
 
         internal bool Version    { get { return emitVer; } }
         internal bool Summary    { get { return summary; } }
@@ -222,6 +224,7 @@ namespace QUT.Gplex.Automaton
                 else if (arg.Equals("BABEL", StringComparison.Ordinal)) babel = !negate;
                 else if (arg.Equals("FILES", StringComparison.Ordinal)) files = !negate;
                 else if (arg.StartsWith("EMBEDBUFF", StringComparison.Ordinal)) embedBuffers = !negate;
+                else if (arg.Equals("INFO", StringComparison.Ordinal)) emitInfo = !negate;
                 else if (arg.Equals("UTF8DEFAULT", StringComparison.Ordinal)) // Deprecated, compatability only.
                 {
                     if (negate)
