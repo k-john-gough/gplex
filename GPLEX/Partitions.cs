@@ -526,8 +526,12 @@ namespace QUT.Gplex.Parser
         /// </summary>
         internal void Canonicalize()
         {
-            if (!invert && this.ranges.Count <= 1 || this.isCanonical)
+            if (this.isCanonical)
+                return;
+            if (!invert && this.ranges.Count <= 1) {
+                this.isCanonical = true;
                 return; // Empty, singleton and upper/lower pair RangeLists are trivially canonical
+            }
             // Process non-empty lists.
             int listIx = 0;
             this.ranges.Sort();
