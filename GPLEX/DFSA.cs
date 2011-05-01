@@ -404,6 +404,8 @@ namespace QUT.Gplex.Automaton
                                 if (nxSet == null) 
                                     nxSet = factory.MkNewSet();
                                 nxSet.Insert(nStCh.ord);
+                                //if (nStCh.ord == 1744)  // TEMPORARY
+                                //    Console.WriteLine("??");
                             }
                         }
                         // If nxSet is not null, then there must have been
