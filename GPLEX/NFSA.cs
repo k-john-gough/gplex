@@ -15,7 +15,17 @@ namespace QUT.Gplex.Automaton
         TaskState task;
 
         public NfsaInstance[] nfas;
-        public Dictionary<uint, NState> next = new Dictionary<uint, NState>();
+
+        /// <summary>
+        /// This dictionary provides a mapping from 
+        /// (current NFSA state ordinal, symbol ordinal) to the 
+        /// next NFSA state ordinal. The implementation (since v1.1.6)
+        /// uses a dictionary key with 32 bits of state ordinal and
+        /// 32 bits of symbol ordinal. Previous versions used only 16
+        /// bits of each, and were erroneous for automata with more
+        /// than 64k of NFSA states.
+        /// </summary>
+        public Dictionary<ulong, NState> next = new Dictionary<ulong, NState>();
 
         public NFSA(TaskState t) { task = t; }
 
@@ -127,6 +137,7 @@ namespace QUT.Gplex.Automaton
             task.ListDivider();
             task.ListStream.WriteLine("NFSA Summary for input file <" + task.FileName + ">");
             task.ListDivider();
+            task.ListStream.WriteLine("Total NFSA states = " + this.next.Count.ToString());
             task.ListStream.WriteLine("Number of Start Conditions = " + (nfas.Length - 1));
             for (int i = 0; i < nfas.Length; i++)
             {
@@ -413,7 +424,7 @@ namespace QUT.Gplex.Automaton
             NfsaInstance myNfaInst;
             NFSA myNfsa;
             internal int ord;
-            private uint serialNumber;
+            public uint serialNumber;
             internal BitArray epsilons;                 // epsilon transitions.
             internal List<NState> epsList = new List<NState>();
             internal RuleDesc accept;                   // rule matched OR null
@@ -424,21 +435,21 @@ namespace QUT.Gplex.Automaton
             {
                 myNfaInst = elem;
                 myNfsa = elem.parent;
-                serialNumber = (ushort)nextSN++;
+                serialNumber = /* (ushort) */ nextSN++;
                 epsilons = new BitArray(myNfaInst.MaxEps);    // Caller adds to nStates list.
             }
 
             internal NState GetNext(int sym)
             {
                 NState rslt = null;
-                uint key = (this.serialNumber << 16) + (ushort)sym;
+                ulong key = checked(((ulong)this.serialNumber << 32) + (ulong)sym);
                 myNfsa.next.TryGetValue(key, out rslt);
                 return rslt;
             }
 
             internal void SetNext(int sym, NState dstState)
             {
-                uint key = (this.serialNumber << 16) + (ushort)sym;
+                ulong key = checked(((ulong)this.serialNumber << 32) + (ulong)sym);
                 myNfsa.next.Add(key, dstState);
             }
 
