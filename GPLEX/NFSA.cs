@@ -424,7 +424,7 @@ namespace QUT.Gplex.Automaton
             NfsaInstance myNfaInst;
             NFSA myNfsa;
             internal int ord;
-            public uint serialNumber;
+            private uint serialNumber;
             internal BitArray epsilons;                 // epsilon transitions.
             internal List<NState> epsList = new List<NState>();
             internal RuleDesc accept;                   // rule matched OR null
@@ -435,7 +435,7 @@ namespace QUT.Gplex.Automaton
             {
                 myNfaInst = elem;
                 myNfsa = elem.parent;
-                serialNumber = /* (ushort) */ nextSN++;
+                serialNumber = nextSN++;
                 epsilons = new BitArray(myNfaInst.MaxEps);    // Caller adds to nStates list.
             }
 
