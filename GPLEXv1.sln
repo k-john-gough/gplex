@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPLEXv1", "GPLEXv1.csproj", "{440C9EA8-409C-4B1D-88B7-A2B5FFF87700}"
 EndProject
 Global
