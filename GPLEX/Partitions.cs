@@ -570,8 +570,10 @@ namespace QUT.Gplex.Parser
         /// <returns>New case-insensitive list</returns>
         internal RangeList MakeCaseAgnosticList() {
             if (isAgnostic) return this; // Function is idempotent. Do not repeat.
-
-            if (!isCanonical) this.Canonicalize();
+            //
+            // Do not canonicalize! We need to make the list case-
+            // agnostic *before* we process the set inversion.
+            //
             List<CharRange> agnosticList = new List<CharRange>();
             foreach (CharRange range in this.ranges) {
                 for (int ch = range.minChr; ch <= range.maxChr; ch++) {
@@ -582,8 +584,14 @@ namespace QUT.Gplex.Parser
                         if (lo == hi)
                             agnosticList.Add(new CharRange(c));
                         else {
-                            agnosticList.Add(new CharRange(lo));
-                            agnosticList.Add(new CharRange(hi));
+                            // There is a scary possibility with some 8-bit character
+                            // sets that some characters may have case-pairs that are
+                            // outside the character-set range limits. Must use guard!
+                            //
+                            if (lo < CharRange.SymCard)
+                                agnosticList.Add( new CharRange( lo ) );
+                            if (hi < CharRange.SymCard)
+                                agnosticList.Add( new CharRange( hi ) );
                         }
                     }
                     else
@@ -593,6 +601,7 @@ namespace QUT.Gplex.Parser
             RangeList result = new RangeList(agnosticList, false);
             result.isCanonical = false;
             result.isAgnostic = true;
+            result.invert = this.invert; // Result is inverted if input is.
             return result;
         }
 
