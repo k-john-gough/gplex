@@ -7,11 +7,11 @@ using System.Resources;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Gplex")]
-[assembly: AssemblyDescription("Gardens Point Scanner Generator version 1.1.6")]
+[assembly: AssemblyDescription("Gardens Point Scanner Generator version 1.1.7")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("QUT")]
 [assembly: AssemblyProduct("Gplex")]
-[assembly: AssemblyCopyright("Copyright John Gough, 2006-2010")]
+[assembly: AssemblyCopyright("Copyright John Gough, 2006-2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -30,6 +30,6 @@ using System.Resources;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.1.6")]
-[assembly: AssemblyFileVersion("1.1.6")]
+[assembly: AssemblyVersion("1.1.7")]
+[assembly: AssemblyFileVersion("1.1.7")]
 [assembly: NeutralResourcesLanguageAttribute("")]

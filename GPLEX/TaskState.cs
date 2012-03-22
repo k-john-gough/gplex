@@ -561,15 +561,16 @@ namespace QUT.Gplex.Automaton
                     CheckOptions();
                     if (!Errors && !ParseOnly)
                     {	// build NFSA
-                        if (ChrClasses)
-                        {
+                        if (ChrClasses) {
                             DateTime t0 = DateTime.Now;
-                            partition = new Partition(TargetSymCardinality, this);
-                            partition.FindClasses(aast);
+                            partition = new Partition( TargetSymCardinality, this );
+                            partition.FindClasses( aast );
                             partition.FixMap();
                             if (verbose)
-                                ClassStatus(t0, partition.Length);
+                                ClassStatus( t0, partition.Length );
                         }
+                        else
+                            CharRange.Init( TargetSymCardinality );
                         nfsa = new NFSA(this);
                         nfsa.Build(aast);
                         if (!Errors)
