@@ -73,9 +73,9 @@ namespace QUT.Gppg
         /// </summary>
         [SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
         protected TSpan CurrentLocationSpan;
+        protected int NextToken;
 
         private TSpan LastSpan;
-        private int NextToken;
         private State FsaState;
         private bool recovering;
         private int tokensSinceLastError;
@@ -221,7 +221,8 @@ namespace QUT.Gppg
             while (true)
             {
 #if TRACE_ACTIONS
-                    Console.Error.WriteLine("Entering state {0} ", FsaState.number);
+                Console.Error.WriteLine("Entering state {0} ", FsaState.number);
+                DisplayStack();
 #endif
                 int action = FsaState.defaultAction;
 
@@ -229,18 +230,18 @@ namespace QUT.Gppg
                 {
                     if (NextToken == 0)
                     {
-#if TRACE_ACTIONS
-                            Console.Error.Write("Reading a token: ");
-#endif
                         // We save the last token span, so that the location span
                         // of production right hand sides that begin or end with a
                         // nullable production will be correct.
                         LastSpan = scanner.yylloc;
                         NextToken = scanner.yylex();
-                    }
-
 #if TRACE_ACTIONS
-                        Console.Error.WriteLine("Next token is {0}", TerminalToString(NextToken));
+                       Console.Error.WriteLine( "Reading: Next token is {0}", TerminalToString( NextToken ) );
+#endif
+                    }
+#if TRACE_ACTIONS
+                    else 
+                        Console.Error.WriteLine( "Next token is still {0}", TerminalToString( NextToken ) );
 #endif
                     if (FsaState.ParserTable.ContainsKey(NextToken))
                         action = FsaState.ParserTable[NextToken];
@@ -350,10 +351,6 @@ namespace QUT.Gppg
                 valueStack.Pop();
                 LocationStack.Pop();
             }
-
-#if TRACE_ACTIONS
-				DisplayStack();
-#endif
             FsaState = StateStack.TopElement();
 
             if (FsaState.Goto.ContainsKey(rule.LeftHandSide))
@@ -444,12 +441,12 @@ namespace QUT.Gppg
                 LocationStack.Pop();
 
 #if TRACE_ACTIONS
-					DisplayStack();
+			    DisplayStack();
 #endif
                 if (StateStack.IsEmpty())
                 {
 #if TRACE_ACTIONS
-                        Console.Error.Write("Aborting: didn't find a state that accepts error token");
+                        Console.Error.WriteLine("Aborting: didn't find a state that accepts error token");
 #endif
                     return false;
                 }
@@ -740,7 +737,9 @@ namespace QUT.Gppg
         // since it may be instantiated by a value struct.  If it were 
         // implemented as a property, machine generated code in derived
         // types would not be able to select on the returned value.
+#pragma warning disable 649
         public TValue yylval;                     // Lexical value: set by scanner
+#pragma warning restore 649
 
         /// <summary>
         /// Current scanner location property. The value is of the
@@ -786,11 +785,19 @@ namespace QUT.Gppg
     /// </summary>
 #if EXPORT_GPPG
     public class State
+    {
+        /// <summary>
+        /// The number of states in the automaton.
+        /// </summary>
+        public int number;
 #else
     internal class State
-#endif
     {
+      /// <summary>
+      /// The number of states in the automaton.
+      /// </summary>
         internal int number;
+#endif
         internal Dictionary<int, int> ParserTable;   // Terminal -> ParseAction
         internal Dictionary<int, int> Goto;          // NonTerminal -> State;
         internal int defaultAction; // = 0;		     // ParseAction
@@ -800,7 +807,7 @@ namespace QUT.Gppg
         /// goto array associate symbol ordinals with next state indices.
         /// The actions array is passed to another constructor. 
         /// </summary>
-        /// <param name="actions">The action list</param>
+        /// <param name="actions">The action list</param>c
         /// <param name="goToList">Next state data</param>
         public State(int[] actions, int[] goToList)
             : this(actions)
