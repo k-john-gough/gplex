@@ -105,8 +105,9 @@ namespace QUT.Gplex
             Console.WriteLine("            /codePage:NN     -- default codepage NN if no unicode prefix (BOM)");
             Console.WriteLine("            /codePageHelp    -- display codepage help");
             Console.WriteLine("            /classes         -- use character equivalence classes");
-            Console.WriteLine("            /frame:path      -- use \"path\" as frame file");
-            Console.WriteLine("            /help            -- display this usage message");
+            Console.WriteLine("            /errorsToConsole -- legacy error-messages (not MSBUILD friendly)");
+            Console.WriteLine("            /frame:path      -- use \"path\" as frame file" );
+            Console.WriteLine("            /help            -- display this usage message" );
             Console.WriteLine("            /info            -- scanner has header comment (on by default)");
             Console.WriteLine("            /listing         -- emit listing even if no errors");
             Console.WriteLine("            /noCompress      -- do not compress scanner tables");

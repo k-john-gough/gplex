@@ -16,13 +16,15 @@ namespace QUT.Gplex.Parser
         internal const int minErr = 50;
         internal const int minWrn = 110;
 
+        internal int code;
         internal bool isWarn;
         internal string message;
         internal LexSpan span;
 
 
-        internal Error(string msg, LexSpan spn, bool wrn)
+        internal Error(int code, string msg, LexSpan spn, bool wrn)
         {
+            this.code = code;
             isWarn = wrn;
             message = msg;
             span = spn;
@@ -71,7 +73,7 @@ namespace QUT.Gplex.Parser
 
         internal void AddError(string msg, LexSpan spn)
         {
-            this.AddError(new Error(msg, spn, false)); errNum++;
+            this.AddError(new Error(3, msg, spn, false)); errNum++;
         }
 
         private void AddError(Error e)
@@ -79,7 +81,7 @@ namespace QUT.Gplex.Parser
             errors.Add(e);
             if (errors.Count > maxErrors)
             {
-                errors.Add(new Error("Too many errors, abandoning", e.span, false));
+                errors.Add(new Error(2, "Too many errors, abandoning", e.span, false));
                 throw new TooManyErrorsException("Too many errors");
             }
         }
@@ -159,7 +161,7 @@ namespace QUT.Gplex.Parser
             }
             // message = prefix + " <" + key + "> " + suffix;
             message = String.Format(CultureInfo.InvariantCulture, "{0} {1}{2}{3} {4}", prefix, lh, key, rh, suffix);
-            this.AddError(new Error(message, spn, num >= Error.minWrn)); 
+            this.AddError(new Error(num, message, spn, num >= Error.minWrn)); 
             if (num < Error.minWrn) errNum++; else wrnNum++;
         }
 
@@ -212,7 +214,7 @@ namespace QUT.Gplex.Parser
 
                 default:  message = "Error " + Convert.ToString(num, CultureInfo.InvariantCulture); break;
             }
-            this.AddError(new Error(message, spn, num >= Error.minWrn));
+            this.AddError(new Error(num, message, spn, num >= Error.minWrn));
             if (num < Error.minWrn) errNum++; else wrnNum++;
         }
  
@@ -379,6 +381,42 @@ namespace QUT.Gplex.Parser
         // -----------------------------------------------------
         //   Console Error Reporting Method
         // -----------------------------------------------------
+
+        internal void DumpErrorsInMsbuildFormat( ScanBuff buff, TextWriter wrtr ) {
+            StringBuilder builder = new StringBuilder();
+            //
+            // Message prefix
+            //
+            string location = (buff != null ? buff.FileName : "GPLEX");
+            foreach (Error err in errors) {
+                builder.Length = 0; // Works for V2.0 even.
+                //
+                // Origin
+                //
+                builder.Append( location );
+                if (buff != null) {
+                    builder.Append( '(' );
+                    builder.Append( err.span.startLine );
+                    builder.Append( ',' );
+                    builder.Append( err.span.startColumn );
+                    builder.Append( ')' );
+                }
+                builder.Append( ':' );
+                //
+                // Category                builder.Append( ':' );
+                //
+                builder.Append( err.isWarn ? "warning " : "error " );
+                builder.Append( err.code );
+                builder.Append( ':' );
+                //
+                // Message
+                //
+                builder.Append( err.message );
+                Console.Error.WriteLine( builder.ToString() );
+            }
+        }
+
+
 
         internal void DumpAll(ScanBuff buff, TextWriter wrtr) {
             int  line = 1;

@@ -1340,7 +1340,7 @@ namespace QUT.Gplex.Automaton
             int eofCount = 0;
             bool[] emitted = new bool[max + 1];
             sWrtr.WriteLine("#region ActionSwitch");
-            sWrtr.WriteLine("#pragma warning disable 162");
+            sWrtr.WriteLine("#pragma warning disable 162, 1522");
             sWrtr.WriteLine("    switch (state)");
             sWrtr.WriteLine("    {");
             sWrtr.WriteLine("        case eofNum:");
@@ -1462,7 +1462,7 @@ namespace QUT.Gplex.Automaton
             sWrtr.WriteLine("        default:");
             sWrtr.WriteLine("            break;");
             sWrtr.WriteLine("    }");
-            sWrtr.WriteLine("#pragma warning restore 162");
+            sWrtr.WriteLine("#pragma warning restore 162, 1522");
             sWrtr.WriteLine("#endregion");
         }
 

@@ -61,6 +61,7 @@ namespace QUT.Gplex.Automaton
         bool emitVer;
         bool files = true;
         bool embedBuffers = true;
+        bool errorsToConsole;
         //bool utf8default;
         bool compressMapExplicit;
         //bool compressNextExplicit;
@@ -156,6 +157,7 @@ namespace QUT.Gplex.Automaton
         internal bool Minimize   { get { return minimize; } }
         internal bool Warnings   { get { return handler.Warnings; } }
         internal bool Unicode    { get { return useUnicode; } }
+        internal bool ErrorsToConsole { get { return errorsToConsole; } }
 
         internal int    CodePage   { get { return fallbackCodepage; } }
         internal int    ErrNum     { get { return handler.ErrNum; } }
@@ -201,6 +203,8 @@ namespace QUT.Gplex.Automaton
                 userFrame = arg.Substring(6);
             else if (arg.Equals("HELP", StringComparison.Ordinal) || arg.Equals("?"))
                 return OptionState.needUsage;
+            else if (arg.Equals("ERRORSTOCONSOLE", StringComparison.Ordinal))
+                errorsToConsole = true;
             else if (arg.Contains("CODEPAGE") && (arg.Contains("HELP") || arg.Contains("?")))
                 return OptionState.needCodepageHelp;
             else if (arg.StartsWith("CODEPAGE:", StringComparison.Ordinal))
@@ -289,7 +293,12 @@ namespace QUT.Gplex.Automaton
 
 		internal void ErrorReport()
 		{
-            try { handler.DumpAll(scanner.Buffer, msgWrtr); }
+            try {
+                if (errorsToConsole)
+                    handler.DumpAll( scanner.Buffer, msgWrtr );
+                else
+                    handler.DumpErrorsInMsbuildFormat( scanner.Buffer, msgWrtr );
+            }
             catch (IOException)
             {
                 /* ignore exception, can't error-list it anyway */
