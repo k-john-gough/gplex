@@ -794,7 +794,7 @@ namespace QUT.Gppg
     internal class State
     {
       /// <summary>
-      /// The number of states in the automaton.
+      /// The index of this state in the states array.
       /// </summary>
         internal int number;
 #endif
