@@ -279,8 +279,10 @@ namespace QUT.Gplex.Parser
                             return;
                         }
                     }
-                    hdlr.ListError(mSpan, 96, clsName); return;
                 }
+                // Class not found error not reported until ALL
+                // classes exported from the assembly have been checked.
+                hdlr.ListError(mSpan, 96, clsName); return;
             }
             catch (FileNotFoundException) { hdlr.ListError(aSpan, 94); }
             catch (FileLoadException) { hdlr.ListError(aSpan, 95); }
