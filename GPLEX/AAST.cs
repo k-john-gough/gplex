@@ -330,7 +330,6 @@ namespace QUT.Gplex.Parser
         internal sealed class ReParser
         {
             BitArray prStart;
-            // Dictionary<string, PredicateLeaf> cats; // Allocated on demand
 
             const char NUL = '\0';
             int symCard;
@@ -371,6 +370,26 @@ namespace QUT.Gplex.Parser
                 this.parent = parent;
             }
 
+            // ============================================================
+            // Here is the EBNF grammar for regular expressions.
+            // Note carefully that this grammar does not use the same
+            // metalanguage as GPPG specifications. In particular '['elem']' 
+            // denotes an optional element, and '{'elem'}' denotes (Kleene) 
+            // closure, with '{'elem'}+' denotes non-zero repetitions.
+            // ============================================================
+            // RegEx : "<<EOF>>" | Expr ;
+            // Expr : ["^"] SimpleExpr ["$"] ;
+            // SimpleExpr : Term ["/" Term] ;
+            // Term : Factor {"|" Factor} ;
+            // Factor : Primary {Primary} ;
+            // Primary : (LitString | "(" Term ")" | Primitive) ["*" | "+" | Repetitions] ;
+            // Repetitions : "{" IntLiteral ["," [IntLiteral] ] "}" ;
+            // Primitive : CharClass | NamedRegexReference | "." | escapedChar | Leaf ;
+            // NamedRegexReference : "{" identifier "}" ;
+            // CharClass : "[" ["^"] {code | code "-" code | CharCategory}+ "]" ;
+            // CharCategory : "[:" predicateName ":]" ;
+            // ============================================================
+ 
             internal RegExTree Parse()
             {
                 try {
@@ -436,6 +455,7 @@ namespace QUT.Gplex.Parser
                     Error(53, index-1, 1, "'" + ex + "'");
             }
 
+            // RegEx : "<<EOF>>" | Expr ;
             internal RegExTree RegEx()
             {
                 if (isEofString())
@@ -449,6 +469,7 @@ namespace QUT.Gplex.Parser
                 }
             }
 
+            // Expr : ["^"] SimpleExpr ["$"] ;
             internal RegExTree Expr()
             {
                 RegExTree tmp;
@@ -467,6 +488,7 @@ namespace QUT.Gplex.Parser
                 return tmp;
             }
 
+            // SimpleExpr : Term ["/" Term] ;
             internal RegExTree Simple()
             {
                 RegExTree tmp = Term();
@@ -475,14 +497,10 @@ namespace QUT.Gplex.Parser
                     scan();
                     return new Binary(RegOp.context, tmp, Term());
                 }
-                //else if (!esc && chr == '$')
-                //{
-                //    scan();
-                //    return new Unary(RegOp.rightAnchor, tmp);
-                //}
                 return tmp;
             }
 
+            // Term : Factor {"|" Factor} ;
             internal RegExTree Term()
             {
                 RegExTree tmp = Factor();
@@ -494,6 +512,7 @@ namespace QUT.Gplex.Parser
                 return tmp;
             }
 
+            // Factor : Primary {Primary} ;
             internal RegExTree Factor()
             {
                 RegExTree tmp = Primary();
@@ -501,6 +520,7 @@ namespace QUT.Gplex.Parser
                     tmp = new Binary(RegOp.concat, tmp, Primary());
                 return tmp;
             }
+
 
             internal RegExTree LitString()
             {
@@ -530,6 +550,7 @@ namespace QUT.Gplex.Parser
                 return new Leaf(str);
             }
 
+            // Primary : (LitString | "(" Term ")" | Primitive) ["*" | "+" | Repetitions] ;
             internal RegExTree Primary()
             {
                 RegExTree tmp;
@@ -574,6 +595,7 @@ namespace QUT.Gplex.Parser
                 return tmp;
             }
 
+            // Repetitions : "{" IntLiteral ["," [IntLiteral] ] "}" ;
             internal void GetRepetitions(Unary tree) 
             {
                 scan();          // read past '{'
@@ -605,13 +627,14 @@ namespace QUT.Gplex.Parser
                 return CharacterUtilities.CodePoint(pat, ref index);
             }
 
+            // Primitive : CharClass | NamedRegexReference | "." | escapedChar | Leaf ;
             internal RegExTree Primitive()
             {
                 RegExTree tmp;
                 if (!esc && chr == '[')
                     tmp = CharClass();
                 else if (!esc && chr == '{' && !Char.IsDigit(peek()))
-                    tmp = UseLexCat();
+                    tmp = UseRegexRef();
                 else if (!esc && chr == '.')
                 {
                     Leaf leaf = new Leaf(RegOp.charClass);
@@ -637,7 +660,8 @@ namespace QUT.Gplex.Parser
                 return tmp;
             }
 
-            internal RegExTree UseLexCat()
+            // NamedRegexReference : "{" identifier "}" ;
+            internal RegExTree UseRegexRef()
             {
                 // Assert chr == '{'
                 int start;
@@ -661,6 +685,7 @@ namespace QUT.Gplex.Parser
                 return null;
             }
 
+            // CharClass : "[" ["^"] {code | code "-" code | CharCategory}+ "]" ;
             internal RegExTree CharClass()
             {
                 // Assert chr == '['
@@ -743,6 +768,7 @@ namespace QUT.Gplex.Parser
                 return leaf;
             }
 
+            // CharCategory : "[:" predicateName ":]" ;
             private Leaf GetCharCategory()
             {
                 // Assert: chr == '[', next is ':'
