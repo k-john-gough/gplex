@@ -13,19 +13,17 @@ using System.Globalization;
 using System.Text;
 using QUT.Gplex;
 
-namespace QUT.Gplex.Parser
-{
+namespace QUT.Gplex.Parser {
     /// <summary>
     /// This class represents the Attributed Abstract Syntax Tree
     /// corresponding to an input LEX file.
     /// </summary>
-	internal sealed class AAST
-	{
+    internal sealed class AAST {
         internal QUT.Gplex.Lexer.Scanner scanner;
         internal ErrorHandler hdlr;
 
-        private List<LexSpan> prolog   = new List<LexSpan>();   // Verbatim declarations for scanning routine
-        private List<LexSpan> epilog   = new List<LexSpan>();   // Epilog code for the scanning routine
+        private List<LexSpan> prolog = new List<LexSpan>();   // Verbatim declarations for scanning routine
+        private List<LexSpan> epilog = new List<LexSpan>();   // Epilog code for the scanning routine
         private List<LexSpan> codeIncl = new List<LexSpan>();   // Text to copy verbatim into output file
 
         internal List<LexSpan> usingStrs = new List<LexSpan>();  // "using" dotted names
@@ -51,153 +49,133 @@ namespace QUT.Gplex.Parser
         internal bool IsVerbose { get { return task.Verbose; } }
         internal bool HasPredicates { get { return lexCatsWithPredicates.Count > 0; } }
 
-        internal enum Destination {scanProlog, scanEpilog, codeIncl}
+        internal enum Destination { scanProlog, scanEpilog, codeIncl }
 
-		internal AAST(Automaton.TaskState t) {
+        internal AAST( Automaton.TaskState t ) {
             task = t;
-            startStates.Add(StartState.initState.Name, StartState.initState);
-            startStates.Add(StartState.allState.Name, StartState.allState);
-		}
+            startStates.Add( StartState.initState.Name, StartState.initState );
+            startStates.Add( StartState.allState.Name, StartState.allState );
+        }
 
-        internal LexSpan UserCode
-        {
+        internal LexSpan UserCode {
             get { return userCode; }
             set { userCode = value; }
         }
 
         internal List<LexSpan> CodeIncl { get { return codeIncl; } }
-        internal List<LexSpan> Prolog  { get { return prolog; } }
+        internal List<LexSpan> Prolog { get { return prolog; } }
         internal List<LexSpan> Epilog { get { return epilog; } }
 
-        internal void AddCodeSpan(Destination dest, LexSpan span)
-        {
+        internal void AddCodeSpan( Destination dest, LexSpan span ) {
             if (!span.IsInitialized) return;
-            switch (dest)
-            {
-                case Destination.codeIncl: CodeIncl.Add(span); break;
-                case Destination.scanProlog: Prolog.Add(span); break;
-                case Destination.scanEpilog: Epilog.Add(span); break;
+            switch (dest) {
+                case Destination.codeIncl: CodeIncl.Add( span ); break;
+                case Destination.scanProlog: Prolog.Add( span ); break;
+                case Destination.scanEpilog: Epilog.Add( span ); break;
             }
         }
 
-        internal void AddVisibility(LexSpan span)
-        {
+        internal void AddVisibility( LexSpan span ) {
             string result = span.ToString();
-            if (result.Equals("internal") || result.Equals("public"))
+            if (result.Equals( "internal" ) || result.Equals( "public" ))
                 visibility = result;
             else
-                hdlr.ListError(span, 98); 
+                hdlr.ListError( span, 98 );
         }
 
-        internal void SetScanBaseName(string name)
-        {
+        internal void SetScanBaseName( string name ) {
             scanBaseName = name;
         }
 
-        internal void SetTokenTypeName(string name)
-        {
+        internal void SetTokenTypeName( string name ) {
             tokenTypeName = name;
         }
 
-        internal void SetScannerTypeName(string name)
-        {
+        internal void SetScannerTypeName( string name ) {
             scannerTypeName = name;
         }
-       
 
-        internal bool AddLexCategory(string name, string verb, LexSpan spn)
-        {
-            if (lexCategories.ContainsKey(name))
+
+        internal bool AddLexCategory( string name, string verb, LexSpan spn ) {
+            if (lexCategories.ContainsKey( name ))
                 return false;
-            else
-            {
-                LexCategory cls = new LexCategory(name, verb, spn);
-                lexCategories.Add(name, cls);
-                cls.ParseRE(this);
+            else {
+                LexCategory cls = new LexCategory( name, verb, spn );
+                lexCategories.Add( name, cls );
+                cls.ParseRE( this );
                 return true;
             }
         }
 
-        internal void AddLexCatPredicate(string name, LexSpan span)
-        {
+        internal void AddLexCatPredicate( string name, LexSpan span ) {
             LexCategory cat;
-            if (!lexCategories.TryGetValue(name, out cat))
-                hdlr.ListError(span, 55, name);
+            if (!lexCategories.TryGetValue( name, out cat ))
+                hdlr.ListError( span, 55, name );
             else if (cat.regX.op != RegOp.charClass)
-                hdlr.ListError(span, 71, name);
-            else if (!cat.HasPredicate)
-            {
+                hdlr.ListError( span, 71, name );
+            else if (!cat.HasPredicate) {
                 cat.HasPredicate = true;
-                lexCatsWithPredicates.Add(cat);
+                lexCatsWithPredicates.Add( cat );
                 // Add a dummy exclusive start state for the predicate
-                AddDummyStartState(cat.PredDummyName);
+                AddDummyStartState( cat.PredDummyName );
             }
         }
 
         //internal bool LookupLexCategory(string name)
         //{ return lexCategories.ContainsKey(name); }
 
-        internal bool AddStartState(bool isX, string name)
-        {
-            return AddStartState(isX, false, name);
+        internal bool AddStartState( bool isX, string name ) {
+            return AddStartState( isX, false, name );
         }
 
-        internal void AddDummyStartState(string name)
-        {
-            AddStartState(true, true, name);
+        internal void AddDummyStartState( string name ) {
+            AddStartState( true, true, name );
         }
 
-        bool AddStartState(bool isX, bool isDummy, string name)
-        {
+        bool AddStartState( bool isX, bool isDummy, string name ) {
             if (name != null)
-                if (startStates.ContainsKey(name))
+                if (startStates.ContainsKey( name ))
                     return false;
-                else
-                {
-                    StartState state = new StartState(isDummy, name);
-                    startStates.Add(name, state);
+                else {
+                    StartState state = new StartState( isDummy, name );
+                    startStates.Add( name, state );
                     if (!isX)
-                        inclStates.Add(state);
+                        inclStates.Add( state );
                 }
             return true;
         }
 
-        internal StartState StartStateValue(string name)
-        {
+        internal StartState StartStateValue( string name ) {
             StartState state;
-            return (startStates.TryGetValue(name, out state) ? state : null);
+            return (startStates.TryGetValue( name, out state ) ? state : null);
         }
 
         internal int StartStateCount { get { return startStates.Count; } }
 
-        internal void AddToAllStates(RuleDesc rule)
-        {
-            foreach (KeyValuePair<string, StartState> p in startStates)
-            {
+        internal void AddToAllStates( RuleDesc rule ) {
+            foreach (KeyValuePair<string, StartState> p in startStates) {
                 StartState s = p.Value;
-                if (!s.IsAll && !s.IsDummy) 
-                    s.AddRule(rule);
+                if (!s.IsAll && !s.IsDummy)
+                    s.AddRule( rule );
             }
         }
 
-        internal void FixupBarActions()
-        {
+        internal void FixupBarActions() {
             foreach (LexCategory cat in this.lexCatsWithPredicates)
-                ruleList.Add(RuleDesc.MkDummyRuleDesc(cat, this));
+                ruleList.Add( RuleDesc.MkDummyRuleDesc( cat, this ) );
 
             LexSpan lastSpan = Parser.BlankSpan;
-            for (int i = ruleList.Count-1; i >= 0; i--)
-            {
+            for (int i = ruleList.Count - 1; i >= 0; i--) {
                 RuleDesc rule = ruleList[i];
                 if (!rule.isBarAction) lastSpan = rule.aSpan;
                 else if (!lastSpan.IsInitialized)
-                    hdlr.ListError(rule.pSpan, 59);
+                    hdlr.ListError( rule.pSpan, 59 );
                 else rule.aSpan = lastSpan;
-                AddRuleToList(rule);
-                // Now give the optional warning for
+                AddRuleToList( rule );
+                // Now give the warning for
                 // patterns that consume no input text.
-                if (/* task.Verbose && */ rule.IsLoopRisk)
-                        hdlr.ListError(rule.pSpan, 115);
+                if (rule.IsLoopRisk)
+                    hdlr.ListError( rule.pSpan, 115 );
             }
         }
 
@@ -206,23 +184,22 @@ namespace QUT.Gplex.Parser
         /// character predicates.  Beware however, that this just
         /// maps the first "crd" characters of the unicode value set.
         /// </summary>
-        private void InitCharCats()
-        {
+        private void InitCharCats() {
             cats = new Dictionary<string, PredicateLeaf>();
-            cats.Add("IsControl", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsControl, Char.IsControl)));
-            cats.Add("IsDigit", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsDigit, Char.IsDigit)));
-            cats.Add("IsLetter", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsLetter, Char.IsLetter)));
-            cats.Add("IsLetterOrDigit", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsLetterOrDigit, Char.IsLetterOrDigit)));
-            cats.Add("IsLower", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsLower, Char.IsLower)));
-            cats.Add("IsNumber", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsNumber, Char.IsNumber)));
-            cats.Add("IsPunctuation", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsPunctuation, Char.IsPunctuation)));
-            cats.Add("IsSeparator", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsSeparator, Char.IsSeparator)));
-            cats.Add("IsSymbol", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsSymbol, Char.IsSymbol)));
-            cats.Add("IsUpper", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsUpper, Char.IsUpper)));
-            cats.Add("IsWhiteSpace", new PredicateLeaf(PredicateLeaf.MkCharTest(Char.IsWhiteSpace, Char.IsWhiteSpace)));
-            cats.Add("IsFormatCharacter", new PredicateLeaf(PredicateLeaf.MkCharTest(CharCategory.IsFormat, CharCategory.IsFormat)));
-            cats.Add("IdentifierStartCharacter", new PredicateLeaf(PredicateLeaf.MkCharTest(CharCategory.IsIdStart, CharCategory.IsIdStart)));
-            cats.Add("IdentifierPartCharacter", new PredicateLeaf(PredicateLeaf.MkCharTest(CharCategory.IsIdPart, CharCategory.IsIdPart)));
+            cats.Add( "IsControl", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsControl, Char.IsControl ) ) );
+            cats.Add( "IsDigit", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsDigit, Char.IsDigit ) ) );
+            cats.Add( "IsLetter", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsLetter, Char.IsLetter ) ) );
+            cats.Add( "IsLetterOrDigit", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsLetterOrDigit, Char.IsLetterOrDigit ) ) );
+            cats.Add( "IsLower", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsLower, Char.IsLower ) ) );
+            cats.Add( "IsNumber", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsNumber, Char.IsNumber ) ) );
+            cats.Add( "IsPunctuation", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsPunctuation, Char.IsPunctuation ) ) );
+            cats.Add( "IsSeparator", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsSeparator, Char.IsSeparator ) ) );
+            cats.Add( "IsSymbol", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsSymbol, Char.IsSymbol ) ) );
+            cats.Add( "IsUpper", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsUpper, Char.IsUpper ) ) );
+            cats.Add( "IsWhiteSpace", new PredicateLeaf( PredicateLeaf.MkCharTest( Char.IsWhiteSpace, Char.IsWhiteSpace ) ) );
+            cats.Add( "IsFormatCharacter", new PredicateLeaf( PredicateLeaf.MkCharTest( CharCategory.IsFormat, CharCategory.IsFormat ) ) );
+            cats.Add( "IdentifierStartCharacter", new PredicateLeaf( PredicateLeaf.MkCharTest( CharCategory.IsIdStart, CharCategory.IsIdStart ) ) );
+            cats.Add( "IdentifierPartCharacter", new PredicateLeaf( PredicateLeaf.MkCharTest( CharCategory.IsIdPart, CharCategory.IsIdPart ) ) );
             // IdentifierPartCharacters actually include the Format category
             // as well, but are kept separate here so we may attach a different
             // semantic action to identifiers that require canonicalization by
@@ -230,11 +207,10 @@ namespace QUT.Gplex.Parser
         }
 
 
-        private void AddUserPredicate(string name, CharTest test)
-        {   
-            if (this.cats == null) 
+        private void AddUserPredicate( string name, CharTest test ) {
+            if (this.cats == null)
                 InitCharCats();
-            cats.Add(name, new PredicateLeaf(test));
+            cats.Add( name, new PredicateLeaf( test ) );
         }
 
         /// <summary>
@@ -246,51 +222,45 @@ namespace QUT.Gplex.Parser
         /// <param name="aSpan">the simple filename of the assembly</param>
         /// <param name="mSpan">the qualified name of the method</param>
         internal void AddUserPredicate(
-            string name, 
-            LexSpan aSpan, 
-            LexSpan mSpan)
-        {
+            string name,
+            LexSpan aSpan,
+            LexSpan mSpan ) {
             // maybe we need (1) type dotted name, (2) method name only?
             string mthName = mSpan.ToString();
             string asmName = aSpan.ToString();
-            int offset = mthName.LastIndexOf('.');
-            string clsName = mthName.Substring(0, offset);
-            string mthIdnt = mthName.Substring(offset + 1);
+            int offset = mthName.LastIndexOf( '.' );
+            string clsName = mthName.Substring( 0, offset );
+            string mthIdnt = mthName.Substring( offset + 1 );
 
-            try
-            {
-                System.Reflection.Assembly asm = System.Reflection.Assembly.LoadFrom(asmName);
+            try {
+                System.Reflection.Assembly asm = System.Reflection.Assembly.LoadFrom( asmName );
                 System.Type[] types = asm.GetExportedTypes();
-                foreach (Type type in types)
-                {
-                    if (type.FullName.Equals(clsName, StringComparison.OrdinalIgnoreCase) ||
-                        type.Name.Equals(clsName, StringComparison.OrdinalIgnoreCase))
-                    {
+                foreach (Type type in types) {
+                    if (type.FullName.Equals( clsName, StringComparison.OrdinalIgnoreCase ) ||
+                        type.Name.Equals( clsName, StringComparison.OrdinalIgnoreCase )) {
                         QUT.Gplex.ICharTestFactory factory =
-                            (ICharTestFactory)System.Activator.CreateInstance(type);
-          
-                        if (factory != null)
-                        {
-                            CharTest test = factory.GetDelegate(mthIdnt);
+                            (ICharTestFactory)System.Activator.CreateInstance( type );
+
+                        if (factory != null) {
+                            CharTest test = factory.GetDelegate( mthIdnt );
                             if (test == null)
-                                hdlr.ListError(mSpan, 97, mthIdnt);
+                                hdlr.ListError( mSpan, 97, mthIdnt );
                             else
-                                AddUserPredicate(name, test);
+                                AddUserPredicate( name, test );
                             return;
                         }
                     }
                 }
                 // Class not found error not reported until ALL
                 // classes exported from the assembly have been checked.
-                hdlr.ListError(mSpan, 96, clsName); return;
+                hdlr.ListError( mSpan, 96, clsName ); return;
             }
-            catch (FileNotFoundException) { hdlr.ListError(aSpan, 94); }
-            catch (FileLoadException) { hdlr.ListError(aSpan, 95); }
-            catch (Exception x) { hdlr.AddError(x.Message, aSpan.Merge(mSpan)); throw; }
+            catch (FileNotFoundException) { hdlr.ListError( aSpan, 94 ); }
+            catch (FileLoadException) { hdlr.ListError( aSpan, 95 ); }
+            catch (Exception x) { hdlr.AddError( x.Message, aSpan.Merge( mSpan ) ); throw; }
         }
 
-        internal void AddRuleToList(RuleDesc rule)
-        {
+        internal void AddRuleToList( RuleDesc rule ) {
             //
             // Versions before 0.4.2.* had incorrect semantics
             // for the handling of inclusive start states.
@@ -304,31 +274,56 @@ namespace QUT.Gplex.Parser
             // have an empty start state list.  Only those without
             // a start state list are added to inclusive states.
             //
-
-            if (rule.list == null || rule.list.Count == 0)
-            {
-                StartState.initState.AddRule(rule);       // Add to initial state
+            if (rule.list == null || rule.list.Count == 0) {
+                StartState.initState.AddRule( rule );       // Add to initial state
                 foreach (StartState inclS in inclStates)  // Add to inclusive states
-                    inclS.AddRule(rule);
+                    inclS.AddRule( rule );
             }
             else if (rule.list[0].IsAll)
-                AddToAllStates(rule);
+                AddToAllStates( rule );
             else
                 foreach (StartState state in rule.list)
-                    state.AddRule(rule);
+                    state.AddRule( rule );
         }
 
-        internal LexSpan AtStart
-        { get { LexSpan tmp = new LexSpan(1,1,1,1,0,0,scanner.Buffer); return tmp; } }
+        internal LexSpan AtStart { get { LexSpan tmp = new LexSpan( 1, 1, 1, 1, 0, 0, scanner.Buffer ); return tmp; } }
 
+        // =============================================================================
+        #region Regular Expression Parser class
         /// <summary>
-        /// NESTED CLASS
-        /// Regular expression parser -- no error recovery attempted
-        /// just throw an exception and abandon the whole pattern.
-        /// This is a hand-written, recursive descent parser.
+        /// NESTED CLASS This is a hand-written, recursive descent parser.
+        /// No error recovery attempted, instead an exception is thrown and
+        /// the parse abandoned. The exception catch handler transforms the 
+        /// exception into a regular error diagnostic.
         /// </summary>
-        internal sealed class ReParser
-        {
+        internal sealed class ReParser {
+
+            // ============================================================
+            // Here is the EBNF grammar for regular expressions.
+            // Note carefully that this grammar does not use the same
+            // metalanguage as GPPG specifications. In particular '['elem']' 
+            // denotes an optional element, and '{'elem'}' denotes (Kleene) 
+            // closure, with '{'elem'}+' denotes non-zero repetitions.
+            //
+            // The actions of the parser build an abstract syntax tree  
+            //  with AST node base-type QUT.Gplex.Parser.RegExTree.
+            // ============================================================
+            // RegEx : "<<EOF>>" | Expr ;
+            // Expr : ["^"] SimpleExpr ["$"] ;
+            // SimpleExpr : Term ["/" Term] ;
+            // Term : Factor {"|" Factor} ;
+            // Factor : Primary {Primary} ;
+            // Primary : (LitString | "(" Term ")" | Primitive) ["*" | "+" | Repetitions] ;
+            // Repetitions : "{" IntLiteral ["," [IntLiteral] ] "}" ;
+            // Primitive : CharClassExpr | NamedRegexReference | "." | escapedChar | char ;
+            // NamedRegexReference : "{" identifier "}" ;
+            // CharClassExpr : CharClass { ("{-}" | "{+}) CharClass } * ;
+            // CharClass : "[" ["^"] {code | code "-" code | FilteredClass}+ "]" ;
+            // FilteredClass : "[:" predicateName ":]" 
+            //               | "[:" CharClassReference ":]"
+            //               ;
+            // ============================================================
+
             BitArray prStart;
 
             const char NUL = '\0';
@@ -346,7 +341,7 @@ namespace QUT.Gplex.Parser
             /// </summary>
             /// <param name="crd">host alphabet cardinality</param>
             void InitReParser() {
-                prStart = new BitArray(symCard, true);
+                prStart = new BitArray( symCard, true );
                 prStart[(int)')'] = false;
                 prStart[(int)'|'] = false;
                 prStart[(int)'*'] = false;
@@ -356,11 +351,11 @@ namespace QUT.Gplex.Parser
                 prStart[(int)'/'] = false;
                 prStart[(int)')'] = false;
                 prStart[(int)'$'] = false;
-                prStart[(int)'/'] = false;                
+                prStart[(int)'/'] = false;
                 prStart[(int)'\0'] = false;
             }
 
-            internal ReParser(string str, LexSpan spn, AAST parent) {
+            internal ReParser( string str, LexSpan spn, AAST parent ) {
                 if (parent.task.Unicode)
                     CharacterUtilities.SetUnicode();
                 symCard = parent.task.HostSymCardinality;
@@ -368,42 +363,28 @@ namespace QUT.Gplex.Parser
                 span = spn;
                 InitReParser();
                 this.parent = parent;
+                //
+                //  This is ugly, but we cannot manipulate
+                //  RangeLists unless the alphabet upper bound
+                //  is known to the code of class Partition.
+                //
+                CharRange.Init( parent.task.TargetSymCardinality );
             }
 
-            // ============================================================
-            // Here is the EBNF grammar for regular expressions.
-            // Note carefully that this grammar does not use the same
-            // metalanguage as GPPG specifications. In particular '['elem']' 
-            // denotes an optional element, and '{'elem'}' denotes (Kleene) 
-            // closure, with '{'elem'}+' denotes non-zero repetitions.
-            // ============================================================
-            // RegEx : "<<EOF>>" | Expr ;
-            // Expr : ["^"] SimpleExpr ["$"] ;
-            // SimpleExpr : Term ["/" Term] ;
-            // Term : Factor {"|" Factor} ;
-            // Factor : Primary {Primary} ;
-            // Primary : (LitString | "(" Term ")" | Primitive) ["*" | "+" | Repetitions] ;
-            // Repetitions : "{" IntLiteral ["," [IntLiteral] ] "}" ;
-            // Primitive : CharClass | NamedRegexReference | "." | escapedChar | Leaf ;
-            // NamedRegexReference : "{" identifier "}" ;
-            // CharClass : "[" ["^"] {code | code "-" code | CharCategory}+ "]" ;
-            // CharCategory : "[:" predicateName ":]" ;
-            // ============================================================
- 
-            internal RegExTree Parse()
-            {
+
+            internal RegExTree Parse() {
                 try {
                     RegExTree tmp;
                     scan();
                     tmp = RegEx();
                     return tmp;
-                } catch (RegExException x) {
-                    x.ListError(parent.hdlr, this.span);
+                }
+                catch (RegExException x) {
+                    x.ListError( parent.hdlr, this.span );
                     return null;
                 }
-                catch (StringInterpretException x)
-                {
-                    parent.hdlr.ListError(this.span, 99, x.Key);
+                catch (StringInterpretException x) {
+                    parent.hdlr.ListError( this.span, 99, x.Key );
                     return null;
                 }
             }
@@ -412,7 +393,7 @@ namespace QUT.Gplex.Parser
                 int len = pat.Length;
                 chr = (index == len ? NUL : pat[index++]);
                 esc = (chr == '\\');
-                if (esc) 
+                if (esc)
                     chr = (index == len ? NUL : pat[index++]);
             }
 
@@ -424,106 +405,109 @@ namespace QUT.Gplex.Parser
                 return (index == pat.Length ? NUL : pat[index]);
             }
 
-            internal bool isEofString() {
-                // The EOF string must be exactly "<<EOF>>"
-                return (pat.Length >= 7 && pat[0] == '<' && pat.Substring(0, 7).Equals("<<EOF>>"));
+            internal char peek2() {
+                return (index + 1 == pat.Length ? NUL : pat[index + 1]);
             }
 
-            internal int GetInt()
-            {
+            internal bool isEofString() {
+                // The EOF string must be exactly "<<EOF>>"
+                return (pat.Length >= 7 && pat[0] == '<' && pat.Substring( 0, 7 ).Equals( "<<EOF>>" ));
+            }
+
+            internal int GetInt() {
                 int val = (int)chr - (int)'0';
                 scan();
-                while (Char.IsDigit(chr))
-                {
+                while (Char.IsDigit( chr )) {
                     checked { val = val * 10 + (int)chr - (int)'0'; }
                     scan();
                 }
                 return val;
             }
 
-            static void Error(int num, int idx, int len, string str)
-            { throw new RegExException(num, idx, len, str); }
+            static void Error( int num, int idx, int len, string str ) {
+                throw new RegExException( num, idx, len, str );
+            }
 
-            void Warn(int num, int idx, int len, string str)
-            { parent.hdlr.ListError(span.FirstLineSubSpan(idx, len), num, str, '"'); }
+            void Warn( int num, int idx, int len, string str ) {
+                parent.hdlr.ListError( span.FirstLineSubSpan( idx, len ), num, str, '"' );
+            }
 
-            internal void checkAndScan(char ex)
-            {
-                if (chr == ex) 
-                    scan(); 
-                else 
-                    Error(53, index-1, 1, "'" + ex + "'");
+            void Warn( int num, int idx, int len ) {
+                parent.hdlr.ListError( span.FirstLineSubSpan( idx, len ), num );
+            }
+
+            internal void checkAndScan( char ex ) {
+                if (chr == ex)
+                    scan();
+                else
+                    Error( 53, index - 1, 1, "'" + ex + "'" );
+            }
+
+            internal void checkAndScan( CharPredicate p, string predName ) {
+                if (p( chr ))
+                    scan();
+                else
+                    Error( 103, index - 1, 1, predName );
             }
 
             // RegEx : "<<EOF>>" | Expr ;
-            internal RegExTree RegEx()
-            {
+            internal RegExTree RegEx() {
                 if (isEofString())
-                    return new Leaf(RegOp.eof);
-                else
-                {
+                    return new Leaf( RegOp.eof );
+                else {
                     RegExTree tmp = Expr();
                     if (chr != '\0')
-                        Error(101, index-1, pat.Length - index + 1, null);
+                        Error( 101, index - 1, pat.Length - index + 1, null );
                     return tmp;
                 }
             }
 
             // Expr : ["^"] SimpleExpr ["$"] ;
-            internal RegExTree Expr()
-            {
+            internal RegExTree Expr() {
                 RegExTree tmp;
-                if (!esc && chr == '^')
-                {
+                if (!esc && chr == '^') {
                     scan();
-                    tmp = new Unary(RegOp.leftAnchor, Simple());
+                    tmp = new Unary( RegOp.leftAnchor, Simple() );
                 }
                 else
                     tmp = Simple();
-                if (!esc && chr == '$')
-                {
+                if (!esc && chr == '$') {
                     scan();
-                    tmp = new Unary(RegOp.rightAnchor, tmp);
+                    tmp = new Unary( RegOp.rightAnchor, tmp );
                 }
                 return tmp;
             }
 
             // SimpleExpr : Term ["/" Term] ;
-            internal RegExTree Simple()
-            {
+            internal RegExTree Simple() {
                 RegExTree tmp = Term();
-                if (!esc && chr == '/')
-                {
+                if (!esc && chr == '/') {
                     scan();
-                    return new Binary(RegOp.context, tmp, Term());
+                    return new Binary( RegOp.context, tmp, Term() );
                 }
                 return tmp;
             }
 
             // Term : Factor {"|" Factor} ;
-            internal RegExTree Term()
-            {
+            internal RegExTree Term() {
                 RegExTree tmp = Factor();
-                while (!esc && chr == '|')
-                {
+                while (!esc && chr == '|') {
                     scan();
-                    tmp = new Binary(RegOp.alt, tmp, Factor());
+                    tmp = new Binary( RegOp.alt, tmp, Factor() );
                 }
                 return tmp;
             }
 
             // Factor : Primary {Primary} ;
-            internal RegExTree Factor()
-            {
+            internal RegExTree Factor() {
                 RegExTree tmp = Primary();
                 while (prStart[(int)chr] || esc)
-                    tmp = new Binary(RegOp.concat, tmp, Primary());
+                    tmp = new Binary( RegOp.concat, tmp, Primary() );
                 return tmp;
             }
 
 
-            internal RegExTree LitString()
-            {
+            internal RegExTree LitString() {
                 int pos = index;
                 int len;
                 string str;
@@ -531,276 +515,311 @@ namespace QUT.Gplex.Parser
                 while (esc || (chr != '"' && chr != NUL))
                     scan();
                 len = index - 1 - pos;
-                checkAndScan('"');
-                str = pat.Substring(pos, len);
-                try
-                {
-                    str = CharacterUtilities.InterpretCharacterEscapes(str);
+                checkAndScan( '"' );
+                str = pat.Substring( pos, len );
+                try {
+                    str = CharacterUtilities.InterpretCharacterEscapes( str );
                 }
-                catch (RegExException x)
-                {
+                catch (RegExException x) {
                     // InterpretCharacterEscapes takes only a
                     // substring of "this.pat". RegExExceptions
                     // that are thrown will have an index value
                     // relative to this substring, so the index
                     // is transformed relative to "this.pat".
-                    x.AdjustIndex(pos);
+                    x.AdjustIndex( pos );
                     throw;
                 }
-                return new Leaf(str);
+                return new Leaf( str );
             }
 
             // Primary : (LitString | "(" Term ")" | Primitive) ["*" | "+" | Repetitions] ;
-            internal RegExTree Primary()
-            {
+            internal RegExTree Primary() {
                 RegExTree tmp;
-                Unary     pls;
+                Unary pls;
                 if (!esc && chr == '"')
                     tmp = LitString();
-                else if (!esc && chr == '(')
-                {
-                    scan(); 
-                    tmp = Term(); 
-                    checkAndScan(')');
+                else if (!esc && chr == '(') {
+                    scan();
+                    tmp = Term();
+                    checkAndScan( ')' );
                 }
-                else 
+                else
                     tmp = Primitive();
 
-                if (!esc && chr == '*')
-                {
+                if (!esc && chr == '*') {
                     scan();
-                    tmp = new Unary(RegOp.closure, tmp);
+                    tmp = new Unary( RegOp.closure, tmp );
                 }
-                else if (!esc && chr == '+')
-                {
-                    pls = new Unary(RegOp.closure, tmp);
+                else if (!esc && chr == '+') {
+                    pls = new Unary( RegOp.closure, tmp );
                     pls.minRep = 1;
                     scan();
                     tmp = pls;
                 }
-                else if (!esc && chr == '?')
-                {
-                    pls = new Unary(RegOp.finiteRep, tmp);
+                else if (!esc && chr == '?') {
+                    pls = new Unary( RegOp.finiteRep, tmp );
                     pls.minRep = 0;
                     pls.maxRep = 1;
                     scan();
                     tmp = pls;
                 }
-                else if (!esc && chr == '{' && Char.IsDigit(peek()))
-                {
-                    pls = new Unary(RegOp.finiteRep, tmp);
-                    GetRepetitions(pls);
+                else if (!esc && chr == '{' && Char.IsDigit( peek() )) {
+                    pls = new Unary( RegOp.finiteRep, tmp );
+                    GetRepetitions( pls );
                     tmp = pls;
                 }
                 return tmp;
             }
 
             // Repetitions : "{" IntLiteral ["," [IntLiteral] ] "}" ;
-            internal void GetRepetitions(Unary tree) 
-            {
+            internal void GetRepetitions( Unary tree ) {
                 scan();          // read past '{'
                 tree.minRep = GetInt();
-                if (!esc && chr == ',')
-                {
+                if (!esc && chr == ',') {
                     scan();
-                    if (Char.IsDigit(chr))
+                    if (Char.IsDigit( chr ))
                         tree.maxRep = GetInt();
                     else
                         tree.op = RegOp.closure;
                 }
                 else
                     tree.maxRep = tree.minRep;
-                checkAndScan('}');
+                checkAndScan( '}' );
             }
 
-            int EscapedChar()
-            {
+            int EscapedChar() {
                 index--;
-                return CharacterUtilities.EscapedChar(pat, ref index);
+                return CharacterUtilities.EscapedChar( pat, ref index );
             }
 
-            int CodePoint()
-            {
-                if (!Char.IsHighSurrogate(chr))
+            int CodePoint() {
+                if (!Char.IsHighSurrogate( chr ))
                     return (int)chr;
                 index--;
-                return CharacterUtilities.CodePoint(pat, ref index);
+                return CharacterUtilities.CodePoint( pat, ref index );
             }
 
-            // Primitive : CharClass | NamedRegexReference | "." | escapedChar | Leaf ;
-            internal RegExTree Primitive()
-            {
+            // Primitive : CharClassExpr | NamedRegexReference | "." | escapedChar | char ;
+            internal RegExTree Primitive() {
                 RegExTree tmp;
                 if (!esc && chr == '[')
-                    tmp = CharClass();
-                else if (!esc && chr == '{' && !Char.IsDigit(peek()))
+                    tmp = CharClassExpr();
+                else if (!esc && chr == '{' && !Char.IsDigit( peek() ))
                     tmp = UseRegexRef();
-                else if (!esc && chr == '.')
-                {
-                    Leaf leaf = new Leaf(RegOp.charClass);
-                    leaf.rangeLit = new RangeLiteral(true);
+                else if (!esc && chr == '.') {
+                    Leaf leaf = new Leaf( RegOp.charClass );
+                    leaf.rangeLit = new RangeLiteral( true );
                     scan();
-                    leaf.rangeLit.list.Add(new CharRange('\n'));
+                    leaf.rangeLit.list.Add( new CharRange( '\n' ) );
                     tmp = leaf;
                 }
                 // Remaining cases are:
                 //  1. escaped character (maybe beyond ffff limit)
                 //  2. ordinary unicode character
                 //  3. maybe a surrogate pair in future
-                else if (esc)
-                {
-                    tmp = new Leaf(EscapedChar());
+                else if (esc) {
+                    tmp = new Leaf( EscapedChar() );
                     scan();
                 }
-                else
-                {
-                    tmp = new Leaf((int)chr);
+                else {
+                    tmp = new Leaf( (int)chr );
                     scan();
                 }
                 return tmp;
             }
 
             // NamedRegexReference : "{" identifier "}" ;
-            internal RegExTree UseRegexRef()
-            {
+            // must be a gplex identifier => ascii names only
+            internal RegExTree UseRegexRef() {
                 // Assert chr == '{'
                 int start;
                 string name;
                 LexCategory cat;
                 scan();                                     // read past '{'
                 start = index - 1;
-                while (chr != '}' && chr != NUL)
+                //
+                //  The lexical grammar for "pattern" only
+                //  allows ident '}' as continuation here.
+                //
+                while (chr != '}' && chr != '\0')
                     scan();
-                name = pat.Substring(start, index - start - 1);
-                checkAndScan('}');
-                if (parent.lexCategories.TryGetValue(name, out cat))
-                {
+                name = pat.Substring( start, index - start - 1 );
+                checkAndScan( '}' );
+                if (parent.lexCategories.TryGetValue( name, out cat )) {
                     Leaf leaf = cat.regX as Leaf;
                     if (leaf != null && leaf.op == RegOp.charClass)
                         leaf.rangeLit.name = name;
                     return cat.regX;
                 }
                 else
-                    Error(55, start, name.Length, name);
+                    Error( 55, start, name.Length, name );
                 return null;
             }
 
-            // CharClass : "[" ["^"] {code | code "-" code | CharCategory}+ "]" ;
-            internal RegExTree CharClass()
-            {
+            // CharClassExpr : CharClass { ("{-}" | "{+}" | "{*}") CharClass } ;
+            internal RegExTree CharClassExpr() {
+                int startIx = index - 1;
+                char lookahead;
+                Leaf leaf = CharClass();
+                while (!esc
+                        && chr == '{'
+                        && ((lookahead = peek()) == '-' || lookahead == '+' || lookahead == '*')
+                        && peek2() == '}') {
+                    scan(); scan(); scan(); // Read past "{x}"
+                    Leaf rhs = CharClass();
+                    if (lookahead == '+')
+                        leaf.Merge( rhs );
+                    else if (lookahead == '-')
+                        leaf.Subtract( rhs );
+                    else
+                        leaf.Intersect( rhs );
+                    leaf.rangeLit.list.Canonicalize();
+                    if (leaf.rangeLit.list.Ranges.Count == 0)
+                        Warn( 118, startIx, index - startIx );
+#if RANGELIST_DIAGNOSTICS
+                    else
+                        Warn( 121, startIx, index - startIx, leaf.rangeLit.list.ToString() );
+#endif
+                }
+                return leaf;
+            }
+
+            // CharClass : "[" ["^"] {code | code "-" code | FilteredClass}+ "]" ;
+            internal Leaf CharClass() {
                 // Assert chr == '['
                 // Need to build a new string taking into account char escapes
-                Leaf leaf = new Leaf(RegOp.charClass);
+                Leaf leaf = new Leaf( RegOp.charClass );
                 bool invert = false;
                 scan();                           // read past '['
-                if (!esc && chr == '^')
-                {
+                if (!esc && chr == '^') {
                     invert = true;
                     scan();                       // read past '^'
                 }
-                leaf.rangeLit = new RangeLiteral(invert);
+                leaf.rangeLit = new RangeLiteral( invert );
                 // Special case of '-' at start, taken as ordinary class member.
                 // This is correct for LEX specification, but is undocumented
                 // behavior for FLEX. GPLEX gives a friendly warning, just in
                 // case this is actually a typographical error.
-                if (!esc && chr == '-')
-                {
-                    Warn(113, index - 1, 1, "-");
-                    leaf.rangeLit.list.Add(new CharRange('-'));
+                if (!esc && chr == '-') {
+                    Warn( 113, index - 1, 1, "-" );
+                    leaf.rangeLit.list.Add( new CharRange( '-' ) );
                     scan();                       // read past -'
                 }
 
-                while (chr != NUL && (esc || chr != ']'))
-                {
+                while (chr != NUL && (esc || chr != ']')) {
                     int lhCodePoint;
-                    int startIx = index-1; // save starting index for error reporting
+                    int startIx = index - 1; // save starting index for error reporting
                     lhCodePoint = (esc ? EscapedChar() : CodePoint());
                     if (!esc && lhCodePoint == (int)'-')
-                        Error(82, startIx, index - startIx, null);
+                        Error( 82, startIx, index - startIx, null );
                     //
                     // There are three possible elements here:
                     //  * a singleton character
                     //  * a character range
-                    //  * a character category like [:IsLetter:]
+                    //  * a filtered class like [:IsLetter:]
                     //
                     if (chr == '[' && !esc && peek() == ':') // character category
                     {
-                        Leaf rslt = GetCharCategory();
-                        leaf.Merge(rslt);
+                        Leaf rslt = FilteredClass();
+                        leaf.Merge( rslt );
                     }
-                    else
-                    {
+                    else {
                         scan();
                         if (!esc && chr == '-')             // character range
                         {
                             scan();
-                            if (!esc && chr == ']')
-                            {
+                            if (!esc && chr == ']') {
                                 // Special case of '-' at end, taken as ordinary class member.
                                 // This is correct for LEX specification, but is undocumented
                                 // behavior for FLEX. GPLEX gives a friendly warning, just in
                                 // case this is actually a typographical error.
-                                leaf.rangeLit.list.Add(new CharRange(lhCodePoint));
-                                leaf.rangeLit.list.Add(new CharRange('-'));
+                                leaf.rangeLit.list.Add( new CharRange( lhCodePoint ) );
+                                leaf.rangeLit.list.Add( new CharRange( '-' ) );
                                 //Error(81, idx, index - idx - 1);
-                                Warn(114, startIx, index - startIx - 1, String.Format(
-                                    CultureInfo.InvariantCulture, 
-                                    "'{0}','{1}'", 
-                                    CharacterUtilities.Map(lhCodePoint), 
-                                    '-'));
+                                Warn( 114, startIx, index - startIx - 1, String.Format(
+                                    CultureInfo.InvariantCulture,
+                                    "'{0}','{1}'",
+                                    CharacterUtilities.Map( lhCodePoint ),
+                                    '-' ) );
                             }
-                            else
-                            {
+                            else {
                                 int rhCodePoint = (esc ? EscapedChar() : CodePoint());
                                 if (rhCodePoint < lhCodePoint)
-                                    Error(54, startIx, index - startIx, null);
+                                    Error( 54, startIx, index - startIx, null );
                                 scan();
-                                leaf.rangeLit.list.Add(new CharRange(lhCodePoint, rhCodePoint));
+                                leaf.rangeLit.list.Add( new CharRange( lhCodePoint, rhCodePoint ) );
                             }
                         }
                         else                               // character singleton
                         {
-                            leaf.rangeLit.list.Add(new CharRange(lhCodePoint));
+                            leaf.rangeLit.list.Add( new CharRange( lhCodePoint ) );
                         }
                     }
                 }
-                checkAndScan(']');
+                checkAndScan( ']' );
+                leaf.rangeLit.list.Canonicalize();
                 return leaf;
             }
 
-            // CharCategory : "[:" predicateName ":]" ;
-            private Leaf GetCharCategory()
-            {
+            // PredicatedClass : "[:" predicateName ":]" ;
+            // predicate name could be any C# identifier.
+            private Leaf FilteredClass() {
                 // Assert: chr == '[', next is ':'
                 int start;
                 string name;
-                PredicateLeaf rslt;
+                Leaf rslt;
                 scan(); // read past '['
                 scan(); // read past ':'
                 start = index - 1;
-                while (Char.IsLetter(chr)) // Need revision for any ident ...
+                //
+                // Get the C# identifier name.
+                //
+                checkAndScan( CharCategory.IsIdStart, "IdStart" );
+                while (CharCategory.IsIdPart( chr ))
                     scan();
-                name = pat.Substring(start, index - start - 1);
-                if (!GetCharCategory(name, out rslt))
-                    Error(76, start, name.Length, name);
-                checkAndScan(':');
-                checkAndScan(']');
+                name = pat.Substring( start, index - start - 1 );
+                rslt = GetPredicate( name, start );
+                checkAndScan( ':' );
+                checkAndScan( ']' );
                 return rslt;
             }
 
-            private bool GetCharCategory(string name, out PredicateLeaf rslt)
-            {
+            private Leaf GetPredicate( string name, int start ) {
                 // lazy allocation of dictionary
-                if (parent.cats == null) 
+                if (parent.cats == null)
                     parent.InitCharCats();
-                bool found = parent.cats.TryGetValue(name, out rslt);
-                // lazy population of element range lists
-                if (found && rslt.rangeLit == null)
-                    rslt.Populate(name, parent);
-                return found;
-            }  
+                //
+                // Try to find name in "cats" list
+                //
+                PredicateLeaf rslt;
+                bool found = parent.cats.TryGetValue( name, out rslt );
+                // lazily populate element range lists
+                if (found) {
+                    if (rslt.rangeLit == null)
+                        rslt.Populate( name, parent );
+                    return rslt;
+                }
+                //
+                // else see if name is named regex reference
+                //
+                LexCategory namedRE;
+                found = parent.lexCategories.TryGetValue( name, out namedRE );
+                if (found) {
+                    if (namedRE.regX.op != RegOp.charClass)
+                        Error( 71, start, name.Length, name );
+                    return namedRE.regX as Leaf;
+                }
+                //
+                // else name not known
+                //
+                Error( 76, start, name.Length, name );
+                return null;
+            }
         }
-	}
+        #endregion // Regular Expression Parser
+        // =============================================================================
+    } // end AAST class.
+
 
     /// <summary>
     /// Objects of this class carry exception information
@@ -809,35 +828,30 @@ namespace QUT.Gplex.Parser
     /// call of Parse().
     /// </summary>
     [Serializable]
-    [SuppressMessage("Microsoft.Design", "CA1064:ExceptionsShouldBePublic")]
+    [SuppressMessage( "Microsoft.Design", "CA1064:ExceptionsShouldBePublic" )]
     // Reason for FxCop message suppression -
     // This exception cannot escape from the local context
-    internal class RegExException : Exception
-    {
+    internal class RegExException : Exception {
         int errNo;
         int index;
         int length;
         string text;
 
-        internal RegExException(int errorNum, int stringIx, int count, string message)
-        { errNo = errorNum; index = stringIx; length = count; text = message; }
+        internal RegExException( int errorNum, int stringIx, int count, string message ) { errNo = errorNum; index = stringIx; length = count; text = message; }
 
-        protected RegExException(SerializationInfo i, StreamingContext c) : base(i, c) { }
+        protected RegExException( SerializationInfo i, StreamingContext c ) : base( i, c ) { }
 
-        internal RegExException AdjustIndex(int delta)
-        { this.index += delta; return this; }
+        internal RegExException AdjustIndex( int delta ) { this.index += delta; return this; }
 
-        internal void ListError(ErrorHandler handler, LexSpan span)
-        {
+        internal void ListError( ErrorHandler handler, LexSpan span ) {
             if (text == null)
-                handler.ListError(span.FirstLineSubSpan(index, length), errNo);
+                handler.ListError( span.FirstLineSubSpan( index, length ), errNo );
             else
-                handler.ListError(span.FirstLineSubSpan(index, length), errNo, text);
+                handler.ListError( span.FirstLineSubSpan( index, length ), errNo, text );
         }
     }
 
-    internal sealed class StartState
-    {
+    internal sealed class StartState {
         static int next = -1;
 
         int ord;
@@ -848,17 +862,15 @@ namespace QUT.Gplex.Parser
         string name;
         internal List<RuleDesc> rules = new List<RuleDesc>();
 
-        internal static StartState allState = new StartState("$ALL$", true);    // ord = -1
-        internal static StartState initState = new StartState("INITIAL", false); // ord = 0;
+        internal static StartState allState = new StartState( "$ALL$", true );    // ord = -1
+        internal static StartState initState = new StartState( "INITIAL", false ); // ord = 0;
 
-        internal StartState(bool isDmy, string str)
-        {
+        internal StartState( bool isDmy, string str ) {
             isDummy = isDmy; name = str; ord = next++;
         }
 
-        StartState(string str, bool isAll)
-        {
-            name = str; this.isAll = isAll; ord = next++ ;
+        StartState( string str, bool isAll ) {
+            name = str; this.isAll = isAll; ord = next++;
         }
 
         internal string Name { get { return name; } }
@@ -866,27 +878,23 @@ namespace QUT.Gplex.Parser
         internal bool IsAll { get { return isAll; } }
         internal bool IsDummy { get { return isDummy; } }
 
-        internal void AddRule(RuleDesc rule)
-        {
-            rules.Add(rule);
+        internal void AddRule( RuleDesc rule ) {
+            rules.Add( rule );
         }
     }
 
     /// <summary>
     /// This class models the nested start-state scopes.
     /// </summary>
-    internal sealed class StartStateScope
-    {
+    internal sealed class StartStateScope {
         private Stack<List<StartState>> stack;
 
-        internal StartStateScope()
-        {
+        internal StartStateScope() {
             stack = new Stack<List<StartState>>();
-            stack.Push(new List<StartState>());
+            stack.Push( new List<StartState>() );
         }
 
-        internal List<StartState> Current
-        {
+        internal List<StartState> Current {
             get { return stack.Peek(); }
         }
 
@@ -905,8 +913,7 @@ namespace QUT.Gplex.Parser
         }
 #endif
 
-        internal void EnterScope(List<StartState> list)
-        {
+        internal void EnterScope( List<StartState> list ) {
             //  There are a couple of tricky cases here.
             //  Neither of them are sensible, but both are
             //  probably legal:
@@ -920,40 +927,34 @@ namespace QUT.Gplex.Parser
             //
             List<StartState> newTop = null;
             List<StartState> current = this.Current;
-            if (list.Contains(StartState.allState))
+            if (list.Contains( StartState.allState ))
                 newTop = list;
-            else if (current.Contains(StartState.allState))
+            else if (current.Contains( StartState.allState ))
                 newTop = current;
-            else
-            {
-                newTop = new List<StartState>(this.Current);
-                foreach (StartState elem in list)
-                {
-                    if (!newTop.Contains(elem))
-                        newTop.Add(elem);
+            else {
+                newTop = new List<StartState>( this.Current );
+                foreach (StartState elem in list) {
+                    if (!newTop.Contains( elem ))
+                        newTop.Add( elem );
                 }
             }
-            stack.Push(newTop);
+            stack.Push( newTop );
         }
 
-        internal void ExitScope()
-        {
+        internal void ExitScope() {
             if (stack.Count > 1)
                 stack.Pop();
         }
 
-        internal void ClearScope()
-        {
-            if (stack.Count != 1)
-            {
+        internal void ClearScope() {
+            if (stack.Count != 1) {
                 stack = new Stack<List<StartState>>();
-                stack.Push(new List<StartState>());
+                stack.Push( new List<StartState>() );
             }
         }
     }
 
-    internal sealed class RuleDesc
-    {
+    internal sealed class RuleDesc {
         static int next = 1;
         string pattern;       // Span of pattern reg-exp
         int minPatternLength;
@@ -987,40 +988,37 @@ namespace QUT.Gplex.Parser
         /// Condition (1) alone will not cause a loop, since
         /// any non-zero length match will take precedence.
         /// </summary>
-        internal bool IsLoopRisk { 
-            get 
-            {
+        internal bool IsLoopRisk {
+            get {
                 return
                     pSpan != null &&
                     reAST != null &&
                     minPatternLength == 0 &&
                     reAST.HasRightContext;
-            } 
+            }
         }
 
         private RuleDesc() { }
 
-        internal RuleDesc(LexSpan loc, LexSpan act, List<StartState> aList, bool bar)
-        {
+        internal RuleDesc( LexSpan loc, LexSpan act, List<StartState> aList, bool bar ) {
             pSpan = loc;
             aSpan = act;
-            pattern = pSpan.buffer.GetString(pSpan.startIndex, pSpan.endIndex);
+            pattern = pSpan.buffer.GetString( pSpan.startIndex, pSpan.endIndex );
             isBarAction = bar;
             list = aList;
             ord = next++;
         }
 
-        internal static RuleDesc MkDummyRuleDesc(LexCategory cat, AAST aast)
-        {
+        internal static RuleDesc MkDummyRuleDesc( LexCategory cat, AAST aast ) {
             RuleDesc result = new RuleDesc();
             result.pSpan = null;
             result.aSpan = aast.AtStart;
             result.isBarAction = false;
             result.isPredDummyRule = true;
-            result.pattern = String.Format(CultureInfo.InvariantCulture, "{{{0}}}", cat.Name);
+            result.pattern = String.Format( CultureInfo.InvariantCulture, "{{{0}}}", cat.Name );
             result.list = new List<StartState>();
-            result.ParseRE(aast);
-            result.list.Add(aast.StartStateValue(cat.PredDummyName));
+            result.ParseRE( aast );
+            result.list.Add( aast.StartStateValue( cat.PredDummyName ) );
             return result;
         }
 
@@ -1028,10 +1026,9 @@ namespace QUT.Gplex.Parser
         internal bool hasAction { get { return aSpan.IsInitialized; } }
         // internal void Dump() { Console.WriteLine(pattern); }
 
-        internal void ParseRE(AAST aast)
-        {
-            reAST = new AAST.ReParser(pattern, pSpan, aast).Parse();
-            SemanticCheck(aast);
+        internal void ParseRE( AAST aast ) {
+            reAST = new AAST.ReParser( pattern, pSpan, aast ).Parse();
+            SemanticCheck( aast );
         }
 
         /// <summary>
@@ -1046,29 +1043,25 @@ namespace QUT.Gplex.Parser
         /// Later need to check ban on multiple right contexts ...
         /// </summary>
         /// <param name="aast"></param>
-        void SemanticCheck(AAST aast)
-        {
+        void SemanticCheck( AAST aast ) {
             RegExTree tree = reAST;
             if (tree != null && tree.op == RegOp.leftAnchor) tree = ((Unary)tree).kid;
-            if (tree != null && tree.op == RegOp.rightAnchor)
-            {
+            if (tree != null && tree.op == RegOp.rightAnchor) {
                 tree = ((Unary)tree).kid;
                 if (tree.op == RegOp.context)
-                    aast.hdlr.ListError(pSpan, 100);
+                    aast.hdlr.ListError( pSpan, 100 );
             }
-            Check(aast, tree);
-            if (tree != null) 
+            Check( aast, tree );
+            if (tree != null)
                 minPatternLength = tree.minimumLength();
         }
 
-        void Check(AAST aast, RegExTree tree)
-        {
+        void Check( AAST aast, RegExTree tree ) {
             Binary bnryTree;
             Unary unryTree;
 
             if (tree == null) return;
-            switch (tree.op)
-            {
+            switch (tree.op) {
                 case RegOp.charClass:
                 case RegOp.primitive:
                 case RegOp.litStr:
@@ -1078,90 +1071,81 @@ namespace QUT.Gplex.Parser
                 case RegOp.concat:
                 case RegOp.alt:
                     bnryTree = (Binary)tree;
-                    Check(aast, bnryTree.lKid);
-                    Check(aast, bnryTree.rKid);
-                    if (tree.op == RegOp.context && 
+                    Check( aast, bnryTree.lKid );
+                    Check( aast, bnryTree.rKid );
+                    if (tree.op == RegOp.context &&
                         bnryTree.lKid.contextLength() == 0 &&
-                        bnryTree.rKid.contextLength() == 0) aast.hdlr.ListError(pSpan, 75);
+                        bnryTree.rKid.contextLength() == 0) aast.hdlr.ListError( pSpan, 75 );
                     break;
                 case RegOp.closure:
                 case RegOp.finiteRep:
                     unryTree = (Unary)tree;
-                    Check(aast, unryTree.kid);
+                    Check( aast, unryTree.kid );
                     break;
                 case RegOp.leftAnchor:
                 case RegOp.rightAnchor:
-                    aast.hdlr.ListError(pSpan, 69);
+                    aast.hdlr.ListError( pSpan, 69 );
                     break;
             }
         }
     }
 
-    internal sealed class LexCategory
-    {
+    internal sealed class LexCategory {
         string name;
         string verb;
         LexSpan vrbSpan;
         bool hasPred;
         internal RegExTree regX;
 
-        internal LexCategory(string nam, string vrb, LexSpan spn)
-        {
+        internal LexCategory( string nam, string vrb, LexSpan spn ) {
             vrbSpan = spn;
             verb = vrb;
             name = nam;
         }
 
-        internal bool HasPredicate { 
-            get { return hasPred; }  
+        internal bool HasPredicate {
+            get { return hasPred; }
             set { hasPred = value; }
         }
 
-        internal string Name
-        { get { return name; } }
+        internal string Name { get { return name; } }
 
-        internal string PredDummyName
-        { get { return "PRED_" + name + "_DUMMY"; } }
+        internal string PredDummyName { get { return "PRED_" + name + "_DUMMY"; } }
 
-        internal void ParseRE(AAST aast)
-        { regX = new AAST.ReParser(verb, vrbSpan, aast).Parse(); }
+        internal void ParseRE( AAST aast ) { regX = new AAST.ReParser( verb, vrbSpan, aast ).Parse(); }
     }
 
-    internal sealed class RuleBuffer
-    {
+    internal sealed class RuleBuffer {
         List<LexSpan> locs = new List<LexSpan>();
         int fRuleLine, lRuleLine;  // First line of rules, last line of rules.
 
         internal int FLine { get { return fRuleLine; } set { fRuleLine = value; } }
         internal int LLine { get { return lRuleLine; } set { lRuleLine = value; } }
 
-        internal void AddSpan(LexSpan l) { locs.Add(l); }
+        internal void AddSpan( LexSpan l ) { locs.Add( l ); }
 
         /// <summary>
         /// This method detects the presence of code *between* rules. Such code has
         /// no unambiguous meaning, and is skipped, with a warning message.
         /// </summary>
         /// <param name="aast"></param>
-        internal void FinalizeCode(AAST aast)
-        {
-            for (int i = 0; i < locs.Count; i++)
-            {
+        internal void FinalizeCode( AAST aast ) {
+            for (int i = 0; i < locs.Count; i++) {
                 LexSpan loc = locs[i];
 
-                if (loc.startLine < FLine) 
-                    aast.AddCodeSpan(AAST.Destination.scanProlog, loc);
-                else if (loc.startLine > LLine) 
-                    aast.AddCodeSpan(AAST.Destination.scanEpilog, loc);
+                if (loc.startLine < FLine)
+                    aast.AddCodeSpan( AAST.Destination.scanProlog, loc );
+                else if (loc.startLine > LLine)
+                    aast.AddCodeSpan( AAST.Destination.scanEpilog, loc );
                 else // code is between rules
-                    aast.hdlr.ListError(loc, 110);
+                    aast.hdlr.ListError( loc, 110 );
             }
         }
     }
 
     #region AST for Regular Expressions
 
-    internal enum RegOp
-    {
+    internal enum RegOp {
         eof,
         context,
         litStr,
@@ -1175,11 +1159,14 @@ namespace QUT.Gplex.Parser
         rightAnchor
     }
 
-    internal abstract class RegExDFS
-    {
-        internal abstract void Op(RegExTree tree);
+    /// <summary>
+    /// Abstract base class for depth first
+    /// search visitor on regular expressions.
+    /// </summary>
+    internal abstract class RegExDFS {
+        internal abstract void Op( RegExTree tree );
     }
-     
+
     /// <summary>
     /// Abstract class for AST representing regular expressions.
     /// Concrete subclasses correspond to --- 
@@ -1187,10 +1174,9 @@ namespace QUT.Gplex.Parser
     /// unary trees (closure, finite repetition and anchored patterns)
     /// leaf nodes (chars, char classes, literal strings and the eof marker)
     /// </summary>
-    internal abstract class RegExTree
-    {
+    internal abstract class RegExTree {
         internal RegOp op;
-        internal RegExTree(RegOp op) { this.op = op; }
+        internal RegExTree( RegOp op ) { this.op = op; }
 
         /// <summary>
         /// This is a helper to compute the length of strings
@@ -1214,57 +1200,59 @@ namespace QUT.Gplex.Parser
         /// over the tree in a depth-first-search visit order.
         /// </summary>
         /// <param name="visitor">visitor.Op(this) is called on each node</param>
-        internal abstract void Visit(RegExDFS visitor);
+        internal abstract void Visit( RegExDFS visitor );
 
         internal virtual bool HasRightContext { get { return false; } }
     }
 
-    internal class Leaf : RegExTree
-    {   // charClass, EOF, litStr, primitive
+    internal class Leaf : RegExTree {   // charClass, EOF, litStr, primitive
 
         internal int chVal;     // in case of primitive char
         internal string str;
         internal RangeLiteral rangeLit;
 
-        internal Leaf(string s) : base(RegOp.litStr) { str = s; } // Don't reinterpret escapes.
-        internal Leaf(int code) : base(RegOp.primitive) { chVal = code; }
-        internal Leaf(RegOp op) : base(op) {}
+        internal Leaf( string s ) : base( RegOp.litStr ) { str = s; } // Don't reinterpret escapes.
+        internal Leaf( int code ) : base( RegOp.primitive ) { chVal = code; }
+        internal Leaf( RegOp op ) : base( op ) { }
 
 
-        internal override int contextLength()
-        {
-            return (op == RegOp.litStr ? str.Length : 1);
+        internal override int contextLength() {
+            return (op == RegOp.litStr ? this.str.Length : 1);
         }
 
         internal override int minimumLength() { return contextLength(); }
 
-        internal override void Visit(RegExDFS visitor) { visitor.Op(this); }
+        internal override void Visit( RegExDFS visitor ) { visitor.Op( this ); }
 
-        internal void Merge(Leaf addend)
-        {
+        internal void Merge( Leaf addend ) {
             foreach (CharRange rng in addend.rangeLit.list.Ranges)
-                this.rangeLit.list.Add(rng);
+                this.rangeLit.list.Add( rng );
+        }
+
+        internal void Subtract( Leaf subtrahend ) {
+            this.rangeLit.list = this.rangeLit.list.SUB( subtrahend.rangeLit.list );
+        }
+
+        internal void Intersect( Leaf rhOperand ) {
+            this.rangeLit.list = this.rangeLit.list.AND( rhOperand.rangeLit.list );
         }
     }
 
-    internal sealed class PredicateLeaf : Leaf
-    {
+    internal sealed class PredicateLeaf : Leaf {
         CharTest Test;
 
-        internal PredicateLeaf() : base(RegOp.charClass) { }
+        internal PredicateLeaf() : base( RegOp.charClass ) { }
 
-        internal PredicateLeaf(CharTest test)
-            : base(RegOp.charClass) { this.Test = test; }
+        internal PredicateLeaf( CharTest test )
+            : base( RegOp.charClass ) { this.Test = test; }
 
-        internal static CharTest MkCharTest(CharPredicate cPred, CodePointPredicate cpPred)
-        {
-            return delegate(int ord)
-            {
+        internal static CharTest MkCharTest( CharPredicate cPred, CodePointPredicate cpPred ) {
+            return delegate( int ord ) {
                 // Use the Char function for the BMP
                 if (ord <= (int)Char.MaxValue)
-                    return cPred((char)ord);
+                    return cPred( (char)ord );
                 else
-                    return cpPred(Char.ConvertFromUtf32(ord), 0);
+                    return cpPred( Char.ConvertFromUtf32( ord ), 0 );
             };
         }
 
@@ -1276,13 +1264,12 @@ namespace QUT.Gplex.Parser
         /// <param name="name"></param>
         /// <param name="aast"></param>
         /// <param name="max"></param>
-        internal void Populate(string name, AAST aast)
-        {
+        internal void Populate( string name, AAST aast ) {
             DateTime begin = DateTime.Now;
 
             int max = aast.Task.TargetSymCardinality;
 
-            this.rangeLit = new RangeLiteral(false);
+            this.rangeLit = new RangeLiteral( false );
             //
             // Run the delegate over all the values 
             // between '\0' and (max-1).  Find contiguous
@@ -1290,12 +1277,12 @@ namespace QUT.Gplex.Parser
             //
             int j = 0;
             int codepage = aast.CodePage;
-            if (max > 256 || 
+            if (max > 256 ||
                 codepage == Automaton.TaskState.rawCP ||
-                codepage == Automaton.TaskState.guessCP)
-            {
+                codepage == Automaton.TaskState.guessCP) {
                 if (max <= 256 && codepage == Automaton.TaskState.guessCP)
-                    aast.hdlr.ListError(aast.AtStart, 93);
+                    aast.hdlr.ListError( aast.AtStart, 93 );
+                //
                 // We are generating a set of numeric code points with
                 // the named property.  No interpretation is needed, either
                 // (1) because this is for a unicode scanner that has
@@ -1303,21 +1290,19 @@ namespace QUT.Gplex.Parser
                 // (2) the user has commanded /codepoint:raw to indicate
                 //     that no interpretation is to be used.
                 //
-                while (j < max)
-                {
+                while (j < max) {
                     int start;
-                    while (j < max && !Test(j))
+                    while (j < max && !Test( j ))
                         j++;
                     if (j == max)
                         break;
                     start = j;
-                    while (j < max && Test(j))
+                    while (j < max && Test( j ))
                         j++;
-                    this.rangeLit.list.Add(new CharRange(start, (j - 1)));
+                    this.rangeLit.list.Add( new CharRange( start, (j - 1) ) );
                 }
             }
-            else 
-            {
+            else {
                 // We are generating a set of byte values from the
                 // 0x00 to 0xFF "alphabet" that correspond to unicode
                 // characters with the named property.  The meaning of
@@ -1325,10 +1310,10 @@ namespace QUT.Gplex.Parser
                 //
                 // Check codepage for single byte property.
                 //
-                Encoding enc = Encoding.GetEncoding(codepage);
+                Encoding enc = Encoding.GetEncoding( codepage );
                 Decoder decoder = enc.GetDecoder();
                 if (!enc.IsSingleByte)
-                    aast.hdlr.ListError(aast.AtStart, 92);
+                    aast.hdlr.ListError( aast.AtStart, 92 );
                 //
                 // Construct character map for bytes.
                 //
@@ -1336,90 +1321,78 @@ namespace QUT.Gplex.Parser
                 bool done;
                 char[] cArray = new char[256];
                 byte[] bArray = new byte[256];
-                for (int b = 0; b < 256; b++)
-                {
+                for (int b = 0; b < 256; b++) {
                     bArray[b] = (byte)b;
                     cArray[b] = '?';
                 }
-                decoder.Convert(bArray, 0, 256, cArray, 0, 256, true, out bNum, out cNum, out done);
+                decoder.Convert( bArray, 0, 256, cArray, 0, 256, true, out bNum, out cNum, out done );
                 //
                 // Now construct the CharRange literal
                 //
-                while (j < max)
-                {
+                while (j < max) {
                     int start;
-                    while (j < max && !Test(cArray[j]))
+                    while (j < max && !Test( cArray[j] ))
                         j++;
                     if (j == max)
                         break;
                     start = j;
-                    while (j < max && Test(cArray[j]))
+                    while (j < max && Test( cArray[j] ))
                         j++;
-                    this.rangeLit.list.Add(new CharRange(start, (j - 1)));
+                    this.rangeLit.list.Add( new CharRange( start, (j - 1) ) );
                 }
             }
-            if (aast.IsVerbose)
-            {
-                Console.WriteLine("GPLEX: Generating [:{0}:], {1}", name, Gplex.Automaton.TaskState.ElapsedTime(begin));
-                //Console.WriteLine("{0} Lex Representation for codepage {1}", name, codepage);
-                //Console.WriteLine(rangeLit.list.LexRepresentation());
+            if (aast.IsVerbose) {
+                Console.WriteLine( "GPLEX: Generating [:{0}:], {1}", name, Gplex.Automaton.TaskState.ElapsedTime( begin ) );
             }
         }
     }
 
-    internal sealed class Unary : RegExTree
-    { // leftAnchor, rightAnchor, finiteRep, closure
+    internal sealed class Unary : RegExTree { // leftAnchor, rightAnchor, finiteRep, closure
         internal RegExTree kid;
         internal int minRep;         // min repetitions for closure/finiteRep
         internal int maxRep;         // max repetitions for finiteRep.
-        internal Unary(RegOp op, RegExTree l) : base(op) { kid = l;  } 
+        internal Unary( RegOp op, RegExTree l ) : base( op ) { kid = l; }
 
-        internal override int contextLength()
-        {
-            switch (op)
-            {
+        internal override int contextLength() {
+            if (this.kid == null) return 0;
+            switch (op) {
                 case RegOp.closure: return 0;
                 case RegOp.finiteRep: return (minRep == maxRep ? kid.contextLength() * minRep : 0);
                 case RegOp.leftAnchor: return kid.contextLength();
                 case RegOp.rightAnchor: return kid.contextLength();
-                default: throw new GplexInternalException("unknown unary RegOp");
+                default: throw new GplexInternalException( "unknown unary RegOp" );
             }
         }
 
-        internal override int minimumLength()
-        {
-            switch (op)
-            {
+        internal override int minimumLength() {
+            if (this.kid == null) return 0;
+            switch (op) {
                 case RegOp.closure:
                 case RegOp.finiteRep: return kid.minimumLength() * minRep;
                 case RegOp.leftAnchor:
                 case RegOp.rightAnchor: return kid.minimumLength();
-                default: throw new GplexInternalException("unknown unary RegOp");
+                default: throw new GplexInternalException( "unknown unary RegOp" );
             }
         }
 
-        internal override void Visit(RegExDFS visitor)
-        {
-            visitor.Op(this);
-            kid.Visit(visitor);
+        internal override void Visit( RegExDFS visitor ) {
+            visitor.Op( this );
+            kid.Visit( visitor );
         }
 
-        internal override bool HasRightContext
-        {
+        internal override bool HasRightContext {
             get { return op == RegOp.leftAnchor && kid.HasRightContext; }
         }
     }
 
-    internal sealed class Binary : RegExTree
-    {
+    internal sealed class Binary : RegExTree {
         internal RegExTree lKid, rKid;
-        internal Binary(RegOp op, RegExTree l, RegExTree r) : base(op) { lKid = l; rKid = r; } 
+        internal Binary( RegOp op, RegExTree l, RegExTree r ) : base( op ) { lKid = l; rKid = r; }
 
-        internal override int contextLength()
-        {
-            if (op == RegOp.context) throw new StringInterpretException("multiple context operators");
-            else
-            {
+        internal override int contextLength() {
+            if (this.rKid == null || this.lKid == null) return 0;
+            if (op == RegOp.context) throw new StringInterpretException( "multiple context operators" );
+            else {
                 int lLen = lKid.contextLength();
                 int rLen = rKid.contextLength();
                 if (lLen <= 0 || rLen <= 0) return 0;
@@ -1429,32 +1402,28 @@ namespace QUT.Gplex.Parser
             }
         }
 
-        internal override int minimumLength()
-        {
-            switch (op)
-            {
+        internal override int minimumLength() {
+            if (this.rKid == null || this.lKid == null) return 0;
+            switch (op) {
                 case RegOp.concat: return lKid.minimumLength() + rKid.minimumLength();
                 case RegOp.context: return lKid.minimumLength();
-                case RegOp.alt:
-                    {
+                case RegOp.alt: {
                         int lLen = lKid.minimumLength();
                         int rLen = rKid.minimumLength();
                         return (lLen <= rLen ? lLen : rLen);
                     }
-                default: throw new GplexInternalException("Bad binary RegOp");
+                default: throw new GplexInternalException( "Bad binary RegOp" );
             }
         }
 
-        internal override bool HasRightContext
-        {
+        internal override bool HasRightContext {
             get { return op == RegOp.context; }
         }
 
-        internal override void Visit(RegExDFS visitor)
-        {
-            visitor.Op(this);
-            lKid.Visit(visitor);
-            rKid.Visit(visitor);
+        internal override void Visit( RegExDFS visitor ) {
+            visitor.Op( this );
+            lKid.Visit( visitor );
+            rKid.Visit( visitor );
         }
     }
     #endregion
