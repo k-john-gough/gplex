@@ -489,8 +489,8 @@ namespace QUT.Gplex.Parser
         /// <returns></returns>
         internal RangeList SUB(RangeList rhOp)
         {
-            if (!isCanonical || !rhOp.isCanonical) 
-                throw new GplexInternalException("RangeList not canonicalized");
+            if (!this.isCanonical || !rhOp.isCanonical)
+                throw new GplexInternalException( "RangeList not canonicalized" );
             if (this.ranges.Count == 0)
                 return new RangeList(false);
             else if (rhOp.ranges.Count == 0)
@@ -605,9 +605,8 @@ namespace QUT.Gplex.Parser
             return result;
         }
 
-#if PARTITION_DIAGNOSTICS
-        internal string LexRepresentation()
-        {
+#if RANGELIST_DIAGNOSTICS
+        public override string ToString() {
             StringBuilder rslt = new StringBuilder();
             rslt.Append('[');
             if (invert)

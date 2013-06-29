@@ -146,6 +146,10 @@ namespace QUT.Gplex.Parser
                     break;
                 case 99: prefix = "Illegal escape sequence"; suffix = "";
                     break;
+                case 103: prefix = "Expected character with property"; suffix = "";
+                    break;
+
+                // Warnings ...
 
                 case 111: prefix = "This char"; suffix = "does not need escape in character class";
                     break;
@@ -155,6 +159,7 @@ namespace QUT.Gplex.Parser
                     break;
                 case 116: prefix = "This pattern always overridden by"; suffix = ""; break;
                 case 117: prefix = "This pattern always overrides"; suffix = ""; break;
+                case 121: prefix = "char class"; suffix = ""; break;
 
                 default: prefix = "Error " + Convert.ToString(num, CultureInfo.InvariantCulture); suffix = "";
                     break;
@@ -207,10 +212,13 @@ namespace QUT.Gplex.Parser
                 case 101: message = "Extra characters at end of regular expression"; break;
                 case 102: message = "Literal string terminated by end of line"; break;
 
+                // Warnings ...
+
                 case 110: message = "Code between rules, ignored"; break;
                 case 112: message = "/babel option is unsafe without /unicode option"; break;
                 case 115: message = "This pattern matches \"\", and might loop"; break;
                 case 116: message = "This pattern is never matched"; break;
+                case 117: message = "This constructed set is empty"; break;
 
                 default:  message = "Error " + Convert.ToString(num, CultureInfo.InvariantCulture); break;
             }
