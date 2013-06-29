@@ -218,7 +218,7 @@ namespace QUT.Gplex.Parser
                 case 112: message = "/babel option is unsafe without /unicode option"; break;
                 case 115: message = "This pattern matches \"\", and might loop"; break;
                 case 116: message = "This pattern is never matched"; break;
-                case 117: message = "This constructed set is empty"; break;
+                case 118: message = "This constructed set is empty"; break;
 
                 default:  message = "Error " + Convert.ToString(num, CultureInfo.InvariantCulture); break;
             }
