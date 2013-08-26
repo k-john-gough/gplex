@@ -1,7 +1,7 @@
 
 README file for GPLEX\GPLEX
 
-Question:  Where are GplexBuffers.cs, Parser.cs and Scanner.cs?
+Question:  What is different about GplexBuffers.cs, Parser.cs and Scanner.cs?
 
 Answer:  
 These three files are not part of the Source-Controlled distribution. 
