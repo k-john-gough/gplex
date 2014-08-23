@@ -497,7 +497,6 @@ using System.Diagnostics.CodeAnalysis;
 ##-->prolog 
                 for (; ; ) {
                     int next;              // next state to enter
-                    bool contextSaved = false;
 #if LEFTANCHORS
                     for (;;) {
                         // Discard characters that do not start any pattern.
@@ -522,6 +521,7 @@ using System.Diagnostics.CodeAnalysis;
                     state = next;
                     GetCode();                    
 #if BACKUP
+                    bool contextSaved = false;
                     while ((next = NextState()) > eofNum) { // Exit for goStart AND for eofNum
                         if (state <= maxAccept && next > maxAccept) { // need to prepare backup data
                             // Store data for the *latest* accept state that was found.
