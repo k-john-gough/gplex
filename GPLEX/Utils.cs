@@ -1,6 +1,6 @@
 //
 // Gardens Point Scanner Generator
-// Copyright (c) K John Gough, QUT 2006-2010
+// Copyright (c) K John Gough, QUT 2006-2014
 // (see accompanying GPLEXcopyright.rtf)
 // 
 // These utilities are used in GPLEX and GPPG

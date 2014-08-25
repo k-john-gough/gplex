@@ -1,5 +1,5 @@
 // Gardens Point Scanner Generator
-// Copyright (c) K John Gough, QUT 2006-2010
+// Copyright (c) K John Gough, QUT 2006-2014
 // (see accompanying GPLEXcopyright.rtf.
 
 //  Scan helper for 0.9.2 version of gplex
