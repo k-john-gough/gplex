@@ -1,87 +1,54 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{440C9EA8-409C-4B1D-88B7-A2B5FFF87700}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <NoStandardLibraries>false</NoStandardLibraries>
+    <TargetFrameworks>net20;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>Gplex</AssemblyName>
     <RootNamespace>QUT.Gplex</RootNamespace>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <ApplicationRevision>0</ApplicationRevision>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>.\bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS RANGELIST_DIAGNOSTICS</DefineConstants>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+
+  <!-- Pack settings -->
+  <PropertyGroup>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <NuspecFile>MSBuild/Gplex.nuspec</NuspecFile>
+    <IntermediatePackDir>$(MSBuildProjectDirectory)/bin/$(Configuration)/publish/</IntermediatePackDir>
+    <PublishDir>$(IntermediatePackDir)$(TargetFramework)/</PublishDir>
+    <NuspecProperties>publishDir=$([MSBuild]::NormalizeDirectory($(IntermediatePackDir)))</NuspecProperties>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
+  <!-- Executes /t:Publish for all target frameworks before packing -->
+  <Target Name="NugetCrossTarget" AfterTargets="Build" Condition="'$(TargetFrameworks)' != ''">
+    <ItemGroup>
+      <_TargetFramework Include="$(TargetFrameworks)" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" Properties="TargetFramework=%(_TargetFramework.Identity)" />
+  </Target>
+
+  <Target Name="NugetSingleTarget" AfterTargets="Build" Condition="'$(TargetFrameworks)' == ''">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" />
+  </Target>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Compile Remove="SpecFiles\LookaheadHelper.cs" />
+    <EmbeddedResource Include="SpecFiles\GplexBuffers.txt" />
+    <EmbeddedResource Include="SpecFiles\gplexx.frame" />
+    <EmbeddedResource Include="SpecFiles\ResourceHeader.txt" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="GPLEXcopyright.rtf" />
+    <GplexFile Include="SpecFiles\gplex.lex">
+      <OutputFile>Scanner.cs</OutputFile>
+    </GplexFile>
+    <GppgFile Include="SpecFiles\gplex.y">
+      <OutputFile>Parser.cs</OutputFile>
+      <Arguments>/gplex /nolines</Arguments>
+    </GppgFile>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="GPLEX\AAST.cs" />
-    <Compile Include="GPLEX\CharClassUtils.cs" />
-    <Compile Include="GPLEX\DFSA.cs" />
-    <Compile Include="GPLEX\ErrorHandler.cs" />
-    <Compile Include="GPLEX\GplexBuffers.cs" />
-    <Compile Include="GPLEX\Minimizer.cs" />
-    <Compile Include="GPLEX\NFSA.cs" />
-    <Compile Include="GPLEX\ParseHelper.cs" />
-    <Compile Include="GPLEX\parser.cs" />
-    <Compile Include="GPLEX\Partitions.cs" />
-    <Compile Include="GPLEX\program.cs" />
-    <Compile Include="GPLEX\ScanHelper.cs" />
-    <Compile Include="GPLEX\Scanner.cs" />
-    <Compile Include="GPLEX\TaskState.cs" />
-    <Compile Include="GPLEX\Utils.cs" />
-    <Compile Include="IncludeResources\Content.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Content.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ShiftReduceParser\ShiftReduceParserCode.cs" />
+    <PackageReference Include="Gplex.Tool" Version="0.0.1-preview1" PrivateAssets="All" />
+    <PackageReference Include="Gppg.Tool" Version="0.0.1-preview1" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="IncludeResources\Content.resx">
-      <SubType>Designer</SubType>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Content.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <SubType>Designer</SubType>
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
-  <ProjectExtensions>
-    <VisualStudio AllowExistingFolder="true" />
-  </ProjectExtensions>
 </Project>

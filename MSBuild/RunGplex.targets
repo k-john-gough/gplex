@@ -1,0 +1,42 @@
+<Project>
+  <PropertyGroup>
+    <_GplexTool>dotnet "$(MSBuildThisFileDirectory)/netcoreapp2.0/Gplex.dll"</_GplexTool>
+  </PropertyGroup>
+
+  <!-- Defaults for GplexFile items -->
+  <ItemDefinitionGroup>
+    <GplexFile>
+      <OutputFile>%(Identity).cs</OutputFile>
+      <Arguments></Arguments>
+    </GplexFile>
+  </ItemDefinitionGroup>
+  
+  <!-- Run once from outer build in cross targeting projects. Imported and called from crossTargetingBuild/*.targets -->
+  <Target Name="GplexToolCrossTarget" BeforeTargets="DispatchToInnerBuilds" Condition="'$(IsCrossTargetingBuild)' != ''" Inputs="@(GplexFile)" Outputs="@(GplexFile->'%(OutputFile)')">
+    <CallTarget Targets="GplexTool" />
+  </Target>
+
+  <!-- Run once in single targeting projects. Imported and called from build/[framework]/*.targets -->
+  <!-- Don't run in VS design time builds. Otherwise VS compiles eagerly and discards the output -->
+  <Target Name="GplexToolSingleTarget" BeforeTargets="CoreCompile" Condition="'$(DesignTimeBuild)' == '' AND '$(IsCrossTargetingBuild)' == ''" Inputs="@(GplexFile)" Outputs="@(GplexFile->'%(OutputFile)')">
+    <CallTarget Targets="GplexTool" />
+  </Target>
+  
+  <Target Name="GplexTool" >
+    <Exec Command="$(_GplexTool) %(GplexFile.Arguments) /out:&quot;./%(GplexFile.OutputFile)&quot; %(GplexFile.Identity)" />
+
+    <!-- Ensure the generated files are included in the build. Otherwise first build fails because the source files are collected already -->
+    <ItemGroup>
+      <Compile Remove="@(GplexFile->'%(OutputFile)')" />
+      <Compile Remove="GplexBuffers.cs" />
+      <Compile Include="@(GplexFile->'%(OutputFile)')" />
+      <Compile Include="GplexBuffers.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Make it work with VS' FastUpToDateCheck -->
+  <ItemGroup>
+    <UpToDateCheckInput Include="@(GplexFile)" />
+  </ItemGroup>
+
+</Project>
