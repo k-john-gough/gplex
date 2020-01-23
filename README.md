@@ -1,6 +1,8 @@
 # Project Description
 GPLEX is a scanner generator which produces lexical scanners written in C# V2 or higher.  The input language is similar to the original LEX specification language, but allows full 21-bit Unicode scanners to be specified.
 
+This repository now includes the full documentation for the scanner-generator.
+
 ## Features
 _GPLEX_ generates scanners based around finite state automata.  The generated automata have the number of states minimized by default, and have a large number of options for table compression.  The default compression scheme is chosen depending on the input alphabet cardinality, and almost always gives a reasonable result.  However a large number of options are available for the user to tune the behavior if necessary.
 
